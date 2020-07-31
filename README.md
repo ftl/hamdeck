@@ -32,6 +32,6 @@ I develop this tools for myself and just for fun in my free time. If you find it
 
 This tool is published under the [MIT License](https://www.tldrlegal.com/l/mit).
 
-This repository and also the binary contains imaged from [https://material.io](https://material.io/resources/icons/), which are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
+This repository and also the binary contains images from [https://material.io](https://material.io/resources/icons/), which are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 Copyright [Florian Thienel](http://thecodingflow.com/)
