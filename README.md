@@ -4,7 +4,7 @@ HamDeck allows you to control and automate your ham radio station using an Elgat
 
 * Toggle the mute state of a pulseaudio sink our source.
 
-This tool is written Go on Linux. It might also work on OSX or Windows, but I did not try that out.
+This tool is written in Go on Linux. It might also work on OSX or Windows, but I did not try that out.
 
 ## Build
 
