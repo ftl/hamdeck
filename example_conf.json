@@ -1,0 +1,16 @@
+{
+	"buttons": [
+		{
+			"type": "pulse.ToggleMute",
+			"index": 24,
+			"sink": "my.sink",
+			"label": "Sink"
+		},
+		{
+			"type": "pulse.ToggleMute",
+			"index": 25,
+			"source": "my.source",
+			"label": "Source"
+		}
+	] 
+}

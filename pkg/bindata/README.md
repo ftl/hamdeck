@@ -1,0 +1,1 @@
+The icons stored in this directory are from [https://material.io](https://material.io/resources/icons/), licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
