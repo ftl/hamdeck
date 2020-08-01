@@ -39,6 +39,7 @@ type GraphicContext interface {
 	SetFontSize(points float64)
 	DrawNoButton() image.Image
 	DrawSingleLineTextButton(text string) image.Image
+	DrawDoubleLineToggleTextButton(text1, text2 string, activeLine int) image.Image
 	LoadIconFromFile(filename string) (image.Image, error)
 	LoadIconFromReader(r io.Reader) (image.Image, error)
 	LoadIconAsset(name string) image.Image

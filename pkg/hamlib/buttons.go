@@ -10,6 +10,10 @@ import (
 	"github.com/ftl/rigproxy/pkg/client"
 )
 
+/*
+	SetModeButton
+*/
+
 func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, label string) *SetModeButton {
 	result := &SetModeButton{
 		client:  hamlibClient,
@@ -98,5 +102,121 @@ func (b *SetModeButton) Pressed() {
 }
 
 func (b *SetModeButton) Released() {
+	// ignore
+}
+
+/*
+	ToggleModeButton
+*/
+
+func NewToggleModeButton(hamlibClient *HamlibClient, mode1 client.Mode, label1 string, mode2 client.Mode, label2 string) *ToggleModeButton {
+	result := &ToggleModeButton{
+		client:  hamlibClient,
+		enabled: true,
+		modes:   []client.Mode{mode1, mode2},
+		labels:  []string{label1, label2},
+	}
+
+	result.updateSelection()
+	hamlibClient.Listen(result)
+
+	return result
+}
+
+type ToggleModeButton struct {
+	hamdeck.BaseButton
+	client        *HamlibClient
+	image         image.Image
+	selectedImage image.Image
+	enabled       bool
+	selected      bool
+	modes         []client.Mode
+	labels        []string
+	currentMode   int
+}
+
+func (b *ToggleModeButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.image = nil
+	b.selectedImage = nil
+	b.Invalidate()
+}
+
+func (b *ToggleModeButton) updateSelection() {
+	mode, _, err := b.client.Conn.ModeAndPassband(context.Background())
+	if err != nil {
+		log.Printf("cannot retrieve current mode: %v", err)
+		return
+	}
+	b.SetMode(mode)
+}
+
+func (b *ToggleModeButton) SetMode(mode client.Mode) {
+	wasSelected := b.selected
+	lastMode := b.currentMode
+
+	b.selected = false
+	for i, m := range b.modes {
+		if mode == m {
+			b.currentMode = i
+			b.selected = true
+			break
+		}
+	}
+
+	if (b.selected == wasSelected) && (b.currentMode == lastMode) {
+		return
+	}
+
+	b.image = nil
+	b.selectedImage = nil
+	b.Invalidate()
+}
+
+func (b *ToggleModeButton) Image(gc hamdeck.GraphicContext) image.Image {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	text := make([]string, 2)
+	for i := range text {
+		text[i] = string(b.modes[i])
+		if b.labels[i] != "" {
+			text[i] = b.labels[i]
+		}
+	}
+	if b.image == nil {
+		b.image = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
+	}
+	if b.selectedImage == nil {
+		gc.SwapColors()
+		b.selectedImage = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
+	}
+	if b.selected {
+		return b.selectedImage
+	}
+	return b.image
+}
+
+func (b *ToggleModeButton) Pressed() {
+	if !b.enabled {
+		return
+	}
+	mode := b.currentMode
+	if b.selected {
+		mode = (mode + 1) % len(b.modes)
+	}
+	ctx := context.Background()
+	err := b.client.Conn.SetModeAndPassband(ctx, b.modes[mode], 0)
+	if err != nil {
+		log.Printf("cannot set mode: %v", err)
+	}
+}
+
+func (b *ToggleModeButton) Released() {
 	// ignore
 }

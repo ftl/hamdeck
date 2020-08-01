@@ -116,6 +116,41 @@ func (gc *GC) DrawSingleLineTextButton(text string) image.Image {
 	return result
 }
 
+func (gc *GC) DrawDoubleLineToggleTextButton(text1, text2 string, activeLine int) image.Image {
+	result, ctx := gc.newImage()
+
+	bigSize := gc.fontSize
+	smallSize := 0.75 * bigSize
+
+	ctx.SetColor(gc.background)
+	ctx.Clear()
+	ctx.SetColor(gc.foreground)
+
+	fontSize := bigSize
+	if activeLine != 1 {
+		fontSize = smallSize
+	}
+	err := ctx.LoadFontFace(gc.fontFile, fontSize)
+	if err != nil {
+		log.Print(err)
+		return gc.DrawNoButton()
+	}
+	ctx.DrawStringAnchored(text1, 0.5*float64(gc.pixels), 0.25*float64(gc.pixels), 0.5, 0.5)
+
+	fontSize = bigSize
+	if activeLine != 2 {
+		fontSize = smallSize
+	}
+	err = ctx.LoadFontFace(gc.fontFile, fontSize)
+	if err != nil {
+		log.Print(err)
+		return gc.DrawNoButton()
+	}
+	ctx.DrawStringAnchored(text2, 0.5*float64(gc.pixels), 0.75*float64(gc.pixels), 0.5, 0.5)
+
+	return result
+}
+
 func (gc *GC) LoadIconFromFile(filename string) (image.Image, error) {
 	iconFile, err := os.Open(filename)
 	if err != nil {

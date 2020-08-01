@@ -12,6 +12,12 @@
 			"label": "Data"
 		},
 		{
+			"type": "hamlib.ToggleMode",
+			"index": 10,
+			"mode1": "LSB",
+			"mode2": "USB"
+		},
+		{
 			"type": "pulse.ToggleMute",
 			"index": 24,
 			"sink": "my.sink",
