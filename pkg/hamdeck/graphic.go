@@ -72,6 +72,12 @@ func (gc *GC) SetForeground(foreground color.Color) {
 	gc.foreground = foreground
 }
 
+func (gc *GC) SwapColors() {
+	temp := gc.foreground
+	gc.foreground = gc.background
+	gc.background = temp
+}
+
 func (gc *GC) SetFont(filename string) {
 	gc.fontFile = filename
 }

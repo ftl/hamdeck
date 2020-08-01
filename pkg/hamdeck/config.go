@@ -55,7 +55,7 @@ func (d *HamDeck) AttachConfiguredButtons(configuration map[string]interface{}) 
 			continue
 		}
 
-		buttonIndex, ok := toInt(buttonConfig[ConfigIndex])
+		buttonIndex, ok := ToInt(buttonConfig[ConfigIndex])
 		if !ok {
 			log.Printf("buttons[%d] has no valid index", i)
 			continue
@@ -79,7 +79,7 @@ func (d *HamDeck) AttachConfiguredButtons(configuration map[string]interface{}) 
 	return nil
 }
 
-func toInt(raw interface{}) (int, bool) {
+func ToInt(raw interface{}) (int, bool) {
 	if raw == nil {
 		return 0, false
 	}
@@ -96,5 +96,21 @@ func toInt(raw interface{}) (int, bool) {
 		return parsedI, true
 	default:
 		return 0, false
+	}
+}
+
+func ToString(raw interface{}) (string, bool) {
+	if raw == nil {
+		return "", false
+	}
+	switch s := raw.(type) {
+	case int:
+		return fmt.Sprintf("%d", s), true
+	case float64:
+		return fmt.Sprintf("%f", s), true
+	case string:
+		return s, true
+	default:
+		return "", false
 	}
 }

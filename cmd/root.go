@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ftl/hamdeck/pkg/hamdeck"
+	"github.com/ftl/hamdeck/pkg/hamlib"
 	"github.com/ftl/hamdeck/pkg/pulse"
 	"github.com/ftl/hamdeck/pkg/streamdeck"
 )
@@ -62,6 +63,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	deck := hamdeck.New(device)
 	deck.RegisterFactory(hamdeck.FactoryMust(pulse.NewButtonFactory()))
+	deck.RegisterFactory(hamdeck.FactoryMust(hamlib.NewButtonFactory()))
 
 	err = configureHamDeck(deck, rootFlags.configFile)
 	if err != nil {

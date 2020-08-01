@@ -8,6 +8,10 @@ const (
 	ConfigLabel    = "label"
 )
 
+const (
+	ToggleMuteButtonType = "pulse.ToggleMute"
+)
+
 func NewButtonFactory() (*Factory, error) {
 	client, err := NewClient()
 	if err != nil {
@@ -28,26 +32,21 @@ func (f *Factory) Close() {
 }
 
 func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
-	if config[hamdeck.ConfigType] != "pulse.ToggleMute" {
+	switch config[hamdeck.ConfigType] {
+	case ToggleMuteButtonType:
+		return f.createToggleMuteButton(config)
+	default:
 		return nil
 	}
-	sinkID, haveSinkID := toString(config[ConfigSinkID])
-	sourceID, haveSourceID := toString(config[ConfigSourceID])
-	label, _ := toString(config[ConfigLabel])
+}
+
+func (f *Factory) createToggleMuteButton(config map[string]interface{}) hamdeck.Button {
+	sinkID, haveSinkID := hamdeck.ToString(config[ConfigSinkID])
+	sourceID, haveSourceID := hamdeck.ToString(config[ConfigSourceID])
+	label, _ := hamdeck.ToString(config[ConfigLabel])
 	if !(haveSinkID || haveSourceID) {
 		return nil
 	}
 
 	return NewToggleMuteButton(f.client, sinkID, sourceID, label)
-}
-
-func toString(raw interface{}) (string, bool) {
-	if raw == nil {
-		return "", false
-	}
-	s, ok := raw.(string)
-	if !ok {
-		return "", false
-	}
-	return s, ok
 }

@@ -119,14 +119,14 @@ func (c *PulseClient) reconnect() error {
 
 	c.client.OnConnectionClosed = func() {
 		log.Print("connection to pulseaudio lost, trying to reconnect")
-		c.notifyEnablers(false)
+		hamdeck.NotifyEnablers(c.listeners, false)
 		retry := 1
 		for {
 			time.Sleep(2 * time.Second)
 			err = c.reconnect()
 			if err == nil {
 				log.Printf("reconnected to pulseaudio after #%d retries", retry)
-				c.notifyEnablers(true)
+				hamdeck.NotifyEnablers(c.listeners, true)
 				return
 			}
 			log.Printf("reconnect to pulseaudio failed, waiting until next retry: %v", err)
@@ -198,15 +198,6 @@ func (c *PulseClient) notifyMuteListeners(id string, mute bool) {
 		muteListener, ok := listener.(MuteListener)
 		if ok {
 			muteListener.SetMute(id, mute)
-		}
-	}
-}
-
-func (c *PulseClient) notifyEnablers(enabled bool) {
-	for _, listener := range c.listeners {
-		enabler, ok := listener.(hamdeck.Enabler)
-		if ok {
-			enabler.Enable(enabled)
 		}
 	}
 }

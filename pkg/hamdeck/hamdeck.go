@@ -34,6 +34,7 @@ type GraphicContext interface {
 	Reset()
 	SetBackground(background color.Color)
 	SetForeground(foreground color.Color)
+	SwapColors()
 	SetFont(filename string)
 	SetFontSize(points float64)
 	DrawNoButton() image.Image
@@ -65,6 +66,15 @@ const FlashingInterval = 500 * time.Millisecond
 
 type Enabler interface {
 	Enable(enabled bool)
+}
+
+func NotifyEnablers(listeners []interface{}, enabled bool) {
+	for _, listener := range listeners {
+		enabler, ok := listener.(Enabler)
+		if ok {
+			enabler.Enable(enabled)
+		}
+	}
 }
 
 type ButtonFactory interface {

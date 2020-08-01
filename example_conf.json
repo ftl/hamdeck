@@ -1,6 +1,17 @@
 {
 	"buttons": [
 		{
+			"type": "hamlib.SetMode",
+			"index": 8,
+			"mode": "CW"
+		},
+		{
+			"type": "hamlib.SetMode",
+			"index": 9,
+			"mode": "PKTUSB",
+			"label": "Data"
+		},
+		{
 			"type": "pulse.ToggleMute",
 			"index": 24,
 			"sink": "my.sink",
