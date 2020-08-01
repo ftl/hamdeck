@@ -63,6 +63,10 @@ type FlashingButton interface {
 
 const FlashingInterval = 500 * time.Millisecond
 
+type Enabler interface {
+	Enable(enabled bool)
+}
+
 type ButtonFactory interface {
 	Close()
 	CreateButton(config map[string]interface{}) Button

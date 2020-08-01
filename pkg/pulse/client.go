@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/jfreymuth/pulse/proto"
+
+	"github.com/ftl/hamdeck/pkg/hamdeck"
 )
 
 const (
@@ -117,12 +119,14 @@ func (c *PulseClient) reconnect() error {
 
 	c.client.OnConnectionClosed = func() {
 		log.Print("connection to pulseaudio lost, trying to reconnect")
+		c.notifyEnablers(false)
 		retry := 1
 		for {
 			time.Sleep(2 * time.Second)
 			err = c.reconnect()
 			if err == nil {
 				log.Printf("reconnected to pulseaudio after #%d retries", retry)
+				c.notifyEnablers(true)
 				return
 			}
 			log.Printf("reconnect to pulseaudio failed, waiting until next retry: %v", err)
@@ -172,12 +176,7 @@ func (c *PulseClient) handleSinkChange(index int) {
 		return
 	}
 
-	for _, listener := range c.listeners {
-		muteListener, ok := listener.(MuteListener)
-		if ok {
-			muteListener.SetMute(infoReply.SinkName, infoReply.Mute)
-		}
-	}
+	c.notifyMuteListeners(infoReply.SinkName, infoReply.Mute)
 }
 
 func (c *PulseClient) handleSourceChange(index int) {
@@ -191,10 +190,23 @@ func (c *PulseClient) handleSourceChange(index int) {
 		return
 	}
 
+	c.notifyMuteListeners(infoReply.SourceName, infoReply.Mute)
+}
+
+func (c *PulseClient) notifyMuteListeners(id string, mute bool) {
 	for _, listener := range c.listeners {
 		muteListener, ok := listener.(MuteListener)
 		if ok {
-			muteListener.SetMute(infoReply.SourceName, infoReply.Mute)
+			muteListener.SetMute(id, mute)
+		}
+	}
+}
+
+func (c *PulseClient) notifyEnablers(enabled bool) {
+	for _, listener := range c.listeners {
+		enabler, ok := listener.(hamdeck.Enabler)
+		if ok {
+			enabler.Enable(enabled)
 		}
 	}
 }

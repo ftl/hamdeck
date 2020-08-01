@@ -27,6 +27,7 @@ func NewToggleMuteButton(client *PulseClient, sinkID, sourceID string, label str
 		sinkID:   sinkID,
 		sourceID: sourceID,
 		label:    label,
+		enabled:  true,
 		muted:    muted,
 	}
 	client.Listen(result)
@@ -40,6 +41,7 @@ type ToggleMuteButton struct {
 	sinkID       string
 	sourceID     string
 	label        string
+	enabled      bool
 	muted        bool
 	mutedImage   image.Image
 	unmutedImage image.Image
@@ -52,8 +54,23 @@ func (b *ToggleMuteButton) SetMute(id string, mute bool) {
 	}
 }
 
+func (b *ToggleMuteButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.mutedImage = nil
+	b.unmutedImage = nil
+	b.Invalidate()
+}
+
 func (b *ToggleMuteButton) Image(gc hamdeck.GraphicContext) image.Image {
 	gc.SetFontSize(16)
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
 	if b.mutedImage == nil {
 		b.mutedImage = gc.DrawIconLabelButton(gc.LoadIconAsset("volume_off.png"), b.label)
 	}
@@ -68,6 +85,10 @@ func (b *ToggleMuteButton) Image(gc hamdeck.GraphicContext) image.Image {
 }
 
 func (b *ToggleMuteButton) Pressed() {
+	if !b.enabled {
+		return
+	}
+
 	var err error
 	if b.sinkID != "" {
 		_, err = b.client.ToggleMuteSink(b.sinkID)
