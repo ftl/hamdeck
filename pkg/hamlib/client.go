@@ -46,8 +46,9 @@ func NotifyModeListeners(listeners []interface{}, mode client.Mode) {
 	}
 }
 
-func NewClient() (*HamlibClient, error) {
+func NewClient(address string) (*HamlibClient, error) {
 	result := &HamlibClient{
+		address:         address,
 		pollingInterval: 500 * time.Millisecond,
 		pollingTimeout:  2 * time.Second,
 	}
@@ -63,6 +64,7 @@ func NewClient() (*HamlibClient, error) {
 type HamlibClient struct {
 	Conn *client.Conn
 
+	address         string
 	pollingInterval time.Duration
 	pollingTimeout  time.Duration
 
@@ -72,7 +74,7 @@ type HamlibClient struct {
 func (c *HamlibClient) reconnect() error {
 	var err error
 
-	c.Conn, err = client.Open("")
+	c.Conn, err = client.Open(c.address)
 	if err != nil {
 		return err
 	}

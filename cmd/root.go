@@ -17,9 +17,10 @@ import (
 )
 
 var rootFlags = struct {
-	serial     string
-	brightness int
-	configFile string
+	serial        string
+	brightness    int
+	configFile    string
+	hamlibAddress string
 }{}
 
 var rootCmd = &cobra.Command{
@@ -38,6 +39,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&rootFlags.serial, "serial", "", "the serial number of the Stream Deck device that should be used")
 	rootCmd.PersistentFlags().IntVar(&rootFlags.brightness, "brightness", 100, "the initial brightness of the Stream Deck device")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.configFile, "config", "", "the configuration file that should be used (default: .config/hamradio/conf.json)")
+	rootCmd.PersistentFlags().StringVar(&rootFlags.hamlibAddress, "hamlib", "", "the address of the rigctld server (default: localhost:4532)")
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -63,7 +65,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	deck := hamdeck.New(device)
 	deck.RegisterFactory(hamdeck.FactoryMust(pulse.NewButtonFactory()))
-	deck.RegisterFactory(hamdeck.FactoryMust(hamlib.NewButtonFactory()))
+	deck.RegisterFactory(hamdeck.FactoryMust(hamlib.NewButtonFactory(rootFlags.hamlibAddress)))
 
 	err = configureHamDeck(deck, rootFlags.configFile)
 	if err != nil {

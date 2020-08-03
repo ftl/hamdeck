@@ -2,7 +2,7 @@ module github.com/ftl/hamdeck
 
 go 1.14
 
-// replace github.com/ftl/rigproxy => ../rigproxy
+replace github.com/ftl/rigproxy => ../rigproxy
 // replace github.com/muesli/streamdeck => ../streamdeck
 replace github.com/jfreymuth/pulse => ../pulse
 
