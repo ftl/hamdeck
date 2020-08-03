@@ -114,3 +114,23 @@ func ToString(raw interface{}) (string, bool) {
 		return "", false
 	}
 }
+
+func ToStringArray(raw interface{}) ([]string, bool) {
+	if raw == nil {
+		return []string{}, false
+	}
+	rawValues, ok := raw.([]interface{})
+	if !ok {
+		return []string{}, false
+	}
+	result := make([]string, len(rawValues))
+	for i, rawValue := range rawValues {
+		value, ok := ToString(rawValue)
+		if ok {
+			result[i] = value
+		} else {
+			return []string{}, false
+		}
+	}
+	return result, true
+}

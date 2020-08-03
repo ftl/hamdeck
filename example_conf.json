@@ -17,6 +17,20 @@
 			"mode1": "LSB",
 			"mode2": "USB"
 		},
+	    {
+	    	"type": "hamlib.Set",
+	    	"index": 11,
+	    	"label": "Band▾",
+	    	"command": "vfo_op",
+	    	"args": ["BAND_DOWN"]
+	    },
+	    {
+	    	"type": "hamlib.Set",
+	    	"index": 12,
+	    	"label": "Band▴",
+	    	"command": "vfo_op",
+	    	"args": ["BAND_UP"]
+	    },
 		{
 			"type": "pulse.ToggleMute",
 			"index": 24,

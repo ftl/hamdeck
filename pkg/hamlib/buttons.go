@@ -220,3 +220,67 @@ func (b *ToggleModeButton) Pressed() {
 func (b *ToggleModeButton) Released() {
 	// ignore
 }
+
+/*
+	SetButton
+*/
+
+func NewSetButton(hamlibClient *HamlibClient, label string, command string, args ...string) *SetButton {
+	result := &SetButton{
+		client:  hamlibClient,
+		enabled: true,
+		label:   label,
+		command: command,
+		args:    args,
+	}
+
+	hamlibClient.Listen(result)
+
+	return result
+}
+
+type SetButton struct {
+	hamdeck.BaseButton
+	client  *HamlibClient
+	image   image.Image
+	enabled bool
+	label   string
+	command string
+	args    []string
+}
+
+func (b *SetButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.image = nil
+	b.Invalidate()
+}
+
+func (b *SetButton) Image(gc hamdeck.GraphicContext) image.Image {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	if b.image == nil {
+		b.image = gc.DrawSingleLineTextButton(b.label)
+	}
+	return b.image
+}
+
+func (b *SetButton) Pressed() {
+	if !b.enabled {
+		return
+	}
+	ctx := context.Background()
+	err := b.client.Conn.Set(ctx, b.command, b.args...)
+	if err != nil {
+		log.Printf("cannot execute %s: %v", b.command, err)
+	}
+}
+
+func (b *SetButton) Released() {
+	// ignore
+}
