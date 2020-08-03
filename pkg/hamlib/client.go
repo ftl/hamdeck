@@ -46,6 +46,25 @@ func NotifyModeListeners(listeners []interface{}, mode client.Mode) {
 	}
 }
 
+type FrequencyListener interface {
+	SetFrequency(frequency client.Frequency)
+}
+
+type FrequencyListenerFunc func(client.Frequency)
+
+func (f FrequencyListenerFunc) SetFrequency(frequency client.Frequency) {
+	f(frequency)
+}
+
+func NotifyFrequencyListeners(listeners []interface{}, frequency client.Frequency) {
+	for _, listener := range listeners {
+		frequencyListener, ok := listener.(FrequencyListener)
+		if ok {
+			frequencyListener.SetFrequency(frequency)
+		}
+	}
+}
+
 func NewClient(address string) (*HamlibClient, error) {
 	result := &HamlibClient{
 		address:         address,
@@ -81,6 +100,7 @@ func (c *HamlibClient) reconnect() error {
 
 	c.Conn.StartPolling(c.pollingInterval, c.pollingTimeout,
 		client.PollCommand(client.OnModeAndPassband(c.setModeAndPassband), "get_mode"),
+		client.PollCommand(client.OnFrequency(c.setFrequency), "get_freq"),
 	)
 
 	c.Conn.WhenClosed(func() {
@@ -109,6 +129,10 @@ func (c *HamlibClient) Close() {
 
 func (c *HamlibClient) setModeAndPassband(mode client.Mode, passband float64) {
 	NotifyModeListeners(c.listeners, mode)
+}
+
+func (c *HamlibClient) setFrequency(frequency client.Frequency) {
+	NotifyFrequencyListeners(c.listeners, frequency)
 }
 
 func (c *HamlibClient) Listen(listener interface{}) {

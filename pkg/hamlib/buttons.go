@@ -5,9 +5,10 @@ import (
 	"image"
 	"log"
 
-	"github.com/ftl/hamdeck/pkg/hamdeck"
-
+	"github.com/ftl/hamradio/bandplan"
 	"github.com/ftl/rigproxy/pkg/client"
+
+	"github.com/ftl/hamdeck/pkg/hamdeck"
 )
 
 /*
@@ -282,5 +283,104 @@ func (b *SetButton) Pressed() {
 }
 
 func (b *SetButton) Released() {
+	// ignore
+}
+
+/*
+	SwitchToBandButton
+*/
+
+func NewSwitchToBandButton(hamlibClient *HamlibClient, label string, bandName string) *SwitchToBandButton {
+	band, ok := bandplan.IARURegion1[bandplan.BandName(bandName)]
+	if !ok {
+		log.Printf("cannot find band %s in IARU Region 1 bandplan", bandName)
+		return nil
+	}
+	result := &SwitchToBandButton{
+		client:  hamlibClient,
+		enabled: true,
+		label:   label,
+		band:    band,
+	}
+
+	hamlibClient.Listen(result)
+
+	return result
+}
+
+type SwitchToBandButton struct {
+	hamdeck.BaseButton
+	client        *HamlibClient
+	image         image.Image
+	selectedImage image.Image
+	enabled       bool
+	selected      bool
+	label         string
+	band          bandplan.Band
+}
+
+func (b *SwitchToBandButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.image = nil
+	b.selectedImage = nil
+	b.Invalidate()
+}
+
+func (b *SwitchToBandButton) updateSelection() {
+	frequency, err := b.client.Conn.Frequency(context.Background())
+	if err != nil {
+		log.Printf("cannot retrieve current frequency: %v", err)
+		return
+	}
+	b.SetFrequency(frequency)
+}
+
+func (b *SwitchToBandButton) SetFrequency(frequency client.Frequency) {
+	wasSelected := b.selected
+	b.selected = b.band.Contains(frequency)
+	if b.selected == wasSelected {
+		return
+	}
+	b.Invalidate()
+}
+
+func (b *SwitchToBandButton) Image(gc hamdeck.GraphicContext) image.Image {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	text := string(b.band.Name)
+	if b.label != "" {
+		text = b.label
+	}
+	if b.image == nil {
+		b.image = gc.DrawSingleLineTextButton(text)
+	}
+	if b.selectedImage == nil {
+		gc.SwapColors()
+		b.selectedImage = gc.DrawSingleLineTextButton(text)
+	}
+	if b.selected {
+		return b.selectedImage
+	}
+	return b.image
+}
+
+func (b *SwitchToBandButton) Pressed() {
+	if !b.enabled {
+		return
+	}
+	ctx := context.Background()
+	err := b.client.Conn.SwitchToBand(ctx, b.band)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func (b *SwitchToBandButton) Released() {
 	// ignore
 }

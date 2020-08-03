@@ -17,12 +17,14 @@ const (
 	ConfigLabel1  = "label1"
 	ConfigMode2   = "mode2"
 	ConfigLabel2  = "label2"
+	ConfigBand    = "band"
 )
 
 const (
-	SetModeButtonType    = "hamlib.SetMode"
-	ToggleModeButtonType = "hamlib.ToggleMode"
-	SetButtonType        = "hamlib.Set"
+	SetModeButtonType      = "hamlib.SetMode"
+	ToggleModeButtonType   = "hamlib.ToggleMode"
+	SetButtonType          = "hamlib.Set"
+	SwitchToBandButtonType = "hamlib.SwitchToBand"
 )
 
 func NewButtonFactory(address string) (*Factory, error) {
@@ -52,6 +54,8 @@ func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
 		return f.createToggleModeButton(config)
 	case SetButtonType:
 		return f.createSetButton(config)
+	case SwitchToBandButtonType:
+		return f.createSwitchToBandButton(config)
 	default:
 		return nil
 	}
@@ -91,4 +95,15 @@ func (f *Factory) createSetButton(config map[string]interface{}) hamdeck.Button 
 	}
 
 	return NewSetButton(f.client, label, command, args...)
+}
+
+func (f *Factory) createSwitchToBandButton(config map[string]interface{}) hamdeck.Button {
+	band, haveBand := hamdeck.ToString(config[ConfigBand])
+	label, _ := hamdeck.ToString(config[ConfigLabel])
+	if !(haveBand) {
+		log.Print("A hamlib.SwitchToBand button must have a band field.")
+		return nil
+	}
+
+	return NewSwitchToBandButton(f.client, label, band)
 }

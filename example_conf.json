@@ -1,6 +1,46 @@
 {
 	"buttons": [
 		{
+			"type": "hamlib.SwitchToBand",
+			"index": 0,
+			"band": "80m"
+		},
+		{
+			"type": "hamlib.SwitchToBand",
+			"index": 1,
+			"band": "40m"
+		},
+		{
+			"type": "hamlib.SwitchToBand",
+			"index": 2,
+			"band": "30m"
+		},
+		{
+			"type": "hamlib.SwitchToBand",
+			"index": 3,
+			"band": "20m"
+		},
+		{
+			"type": "hamlib.SwitchToBand",
+			"index": 4,
+			"band": "17m"
+		},
+		{
+			"type": "hamlib.SwitchToBand",
+			"index": 5,
+			"band": "15m"
+		},
+		{
+			"type": "hamlib.SwitchToBand",
+			"index": 6,
+			"band": "12m"
+		},
+		{
+			"type": "hamlib.SwitchToBand",
+			"index": 7,
+			"band": "10m"
+		},
+		{
 			"type": "hamlib.SetMode",
 			"index": 8,
 			"mode": "CW"
