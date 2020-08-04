@@ -84,6 +84,25 @@ func NotifyPowerLevelListeners(listeners []interface{}, powerLevel float64) {
 	}
 }
 
+type PTTListener interface {
+	SetPTT(ptt client.PTT)
+}
+
+type PTTListenerFunc func(client.PTT)
+
+func (f PTTListenerFunc) SetPTT(ptt client.PTT) {
+	f(ptt)
+}
+
+func NotifyPTTListeners(listeners []interface{}, ptt client.PTT) {
+	for _, listener := range listeners {
+		pttListener, ok := listener.(PTTListener)
+		if ok {
+			pttListener.SetPTT(ptt)
+		}
+	}
+}
+
 func NewClient(address string) (*HamlibClient, error) {
 	result := &HamlibClient{
 		address:         address,
@@ -121,6 +140,7 @@ func (c *HamlibClient) reconnect() error {
 		client.PollCommand(client.OnModeAndPassband(c.setModeAndPassband)),
 		client.PollCommand(client.OnFrequency(c.setFrequency)),
 		client.PollCommand(client.OnPowerLevel(c.setPowerLevel)),
+		client.PollCommand(client.OnPTT(c.setPTT)),
 	)
 
 	c.Conn.WhenClosed(func() {
@@ -157,6 +177,10 @@ func (c *HamlibClient) setFrequency(frequency client.Frequency) {
 
 func (c *HamlibClient) setPowerLevel(powerLevel float64) {
 	NotifyPowerLevelListeners(c.listeners, powerLevel)
+}
+
+func (c *HamlibClient) setPTT(ptt client.PTT) {
+	NotifyPTTListeners(c.listeners, ptt)
 }
 
 func (c *HamlibClient) Listen(listener interface{}) {

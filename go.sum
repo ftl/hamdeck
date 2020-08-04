@@ -25,8 +25,8 @@ github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMo
 github.com/ftl/hamradio v0.0.0-20200721200456-334cc249f095 h1:2Wcq7hZy6OYMtaE5ykWVreA0rbwV4UX4v5WtJo4yJCg=
 github.com/ftl/hamradio v0.0.0-20200721200456-334cc249f095/go.mod h1:Gyec2UUjJF0AG3bIoMnsEF/aP8FExb1BgqyY7IohODs=
 github.com/ftl/localcopy v0.0.0-20190616142648-8915fb81f0d9/go.mod h1:4sZLCxjgn++exy5u0muVzlvnahfanPuiHLQo0GJQnPA=
-github.com/ftl/rigproxy v0.0.0-20200804083623-21aea16acd5a h1:P5NKUTglmrlwfXyljIOD40WgfwZSOyOst592FjiBe8M=
-github.com/ftl/rigproxy v0.0.0-20200804083623-21aea16acd5a/go.mod h1:ivLEQIN4LL2hch0zVynvVutPUzFCeGt/Z9F11U1l01E=
+github.com/ftl/rigproxy v0.0.0-20200804102549-1bf4b5d03455 h1:rjBsdXKGxp15PK2mPoHQDFSvDnkoeOCOepoLa9+GGMY=
+github.com/ftl/rigproxy v0.0.0-20200804102549-1bf4b5d03455/go.mod h1:ivLEQIN4LL2hch0zVynvVutPUzFCeGt/Z9F11U1l01E=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9GBnD5lWE=

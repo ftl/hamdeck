@@ -6,7 +6,8 @@ HamDeck allows you to control and automate your ham radio station using an Elgat
 * Call any simple hamlib set command (e.g. `vfo_op BAND_UP`).
 * Set the mode of your radio through hamlib.
 * Switch to a specific frequency band through hamlib.
-* Set the output power level of your radio through hamlib. 
+* Set the output power level of your radio through hamlib.
+* Control the TX state (MOX) of your radio through hamlib.
 
 This tool is written in Go on Linux. It might also work on OSX or Windows, but I did not try that out.
 

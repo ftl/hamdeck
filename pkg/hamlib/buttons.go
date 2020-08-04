@@ -474,3 +474,117 @@ func (b *SetPowerLevelButton) Pressed() {
 func (b *SetPowerLevelButton) Released() {
 	// ignore
 }
+
+/*
+	MOXButton
+*/
+
+func NewMOXButton(hamlibClient *HamlibClient, label string) *MOXButton {
+	if label == "" {
+		label = "TX"
+	}
+
+	result := &MOXButton{
+		client:  hamlibClient,
+		enabled: true,
+		label:   label,
+	}
+
+	hamlibClient.Listen(result)
+
+	return result
+}
+
+type MOXButton struct {
+	hamdeck.BaseButton
+	client        *HamlibClient
+	image         image.Image
+	selectedImage image.Image
+	flashImage    image.Image
+	enabled       bool
+	selected      bool
+	flashOn       bool
+	label         string
+}
+
+func (b *MOXButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.image = nil
+	b.selectedImage = nil
+	b.Invalidate()
+}
+
+func (b *MOXButton) updateSelection() {
+	ptt, err := b.client.Conn.PTT(context.Background())
+	if err != nil {
+		log.Printf("cannot retrieve current PTT state: %v", err)
+		return
+	}
+	b.SetPTT(ptt)
+}
+
+func (b *MOXButton) Flash(flashOn bool) {
+	if !b.selected {
+		return
+	}
+
+	b.flashOn = flashOn
+	b.Invalidate()
+}
+
+func (b *MOXButton) SetPTT(ptt client.PTT) {
+	wasSelected := b.selected
+	b.selected = (ptt != client.PTTRx)
+	if b.selected == wasSelected {
+		return
+	}
+	b.Invalidate()
+}
+
+func (b *MOXButton) Image(gc hamdeck.GraphicContext) image.Image {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	if b.image == nil {
+		b.image = gc.DrawSingleLineTextButton(b.label)
+	}
+	if b.flashImage == nil {
+		gc.SetBackground(hamdeck.Red)
+		b.flashImage = gc.DrawSingleLineTextButton(b.label)
+	}
+	if b.selectedImage == nil {
+		gc.SwapColors()
+		b.selectedImage = gc.DrawSingleLineTextButton(b.label)
+	}
+	if !b.selected {
+		return b.image
+	}
+	if b.flashOn {
+		return b.flashImage
+	}
+	return b.selectedImage
+}
+
+func (b *MOXButton) Pressed() {
+	if !b.enabled {
+		return
+	}
+	value := client.PTTTx
+	if b.selected {
+		value = client.PTTRx
+	}
+	ctx := context.Background()
+	err := b.client.Conn.SetPTT(ctx, value)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func (b *MOXButton) Released() {
+	// ignore
+}

@@ -27,6 +27,7 @@ const (
 	SetButtonType           = "hamlib.Set"
 	SwitchToBandButtonType  = "hamlib.SwitchToBand"
 	SetPowerLevelButtonType = "hamlib.SetPowerLevel"
+	MOXButtonType           = "hamlib.MOX"
 )
 
 func NewButtonFactory(address string) (*Factory, error) {
@@ -60,6 +61,8 @@ func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
 		return f.createSwitchToBandButton(config)
 	case SetPowerLevelButtonType:
 		return f.createSetPowerLevelButton(config)
+	case MOXButtonType:
+		return f.createMOXButton(config)
 	default:
 		return nil
 	}
@@ -121,4 +124,10 @@ func (f *Factory) createSetPowerLevelButton(config map[string]interface{}) hamde
 	}
 
 	return NewSetPowerLevelButton(f.client, label, value)
+}
+
+func (f *Factory) createMOXButton(config map[string]interface{}) hamdeck.Button {
+	label, _ := hamdeck.ToString(config[ConfigLabel])
+
+	return NewMOXButton(f.client, label)
 }
