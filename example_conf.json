@@ -71,6 +71,24 @@
 	    	"command": "vfo_op",
 	    	"args": ["BAND_UP"]
 	    },
+	    {
+	    	"type": "hamlib.SetPowerLevel",
+	    	"index": 13,
+			"label": "10W",
+			"value": 0.1
+	    },
+	    {
+	    	"type": "hamlib.SetPowerLevel",
+	    	"index": 14,
+			"label": "50W",
+			"value": 0.5
+	    },
+	    {
+	    	"type": "hamlib.SetPowerLevel",
+	    	"index": 15,
+			"label": "100W",
+			"value": 1.0
+	    },
 		{
 			"type": "pulse.ToggleMute",
 			"index": 24,

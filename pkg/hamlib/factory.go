@@ -18,13 +18,15 @@ const (
 	ConfigMode2   = "mode2"
 	ConfigLabel2  = "label2"
 	ConfigBand    = "band"
+	ConfigValue   = "value"
 )
 
 const (
-	SetModeButtonType      = "hamlib.SetMode"
-	ToggleModeButtonType   = "hamlib.ToggleMode"
-	SetButtonType          = "hamlib.Set"
-	SwitchToBandButtonType = "hamlib.SwitchToBand"
+	SetModeButtonType       = "hamlib.SetMode"
+	ToggleModeButtonType    = "hamlib.ToggleMode"
+	SetButtonType           = "hamlib.Set"
+	SwitchToBandButtonType  = "hamlib.SwitchToBand"
+	SetPowerLevelButtonType = "hamlib.SetPowerLevel"
 )
 
 func NewButtonFactory(address string) (*Factory, error) {
@@ -56,6 +58,8 @@ func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
 		return f.createSetButton(config)
 	case SwitchToBandButtonType:
 		return f.createSwitchToBandButton(config)
+	case SetPowerLevelButtonType:
+		return f.createSetPowerLevelButton(config)
 	default:
 		return nil
 	}
@@ -106,4 +110,15 @@ func (f *Factory) createSwitchToBandButton(config map[string]interface{}) hamdec
 	}
 
 	return NewSwitchToBandButton(f.client, label, band)
+}
+
+func (f *Factory) createSetPowerLevelButton(config map[string]interface{}) hamdeck.Button {
+	value, haveValue := hamdeck.ToFloat(config[ConfigValue])
+	label, haveLabel := hamdeck.ToString(config[ConfigLabel])
+	if !(haveValue && haveLabel) {
+		log.Print("A hamlib.SetPowerLevel button must have value and label fields.")
+		return nil
+	}
+
+	return NewSetPowerLevelButton(f.client, label, value)
 }

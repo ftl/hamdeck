@@ -65,6 +65,25 @@ func NotifyFrequencyListeners(listeners []interface{}, frequency client.Frequenc
 	}
 }
 
+type PowerLevelListener interface {
+	SetPowerLevel(powerLevel float64)
+}
+
+type PowerLevelListenerFunc func(float64)
+
+func (f PowerLevelListenerFunc) SetPowerLevel(powerLevel float64) {
+	f(powerLevel)
+}
+
+func NotifyPowerLevelListeners(listeners []interface{}, powerLevel float64) {
+	for _, listener := range listeners {
+		powerLevelListener, ok := listener.(PowerLevelListener)
+		if ok {
+			powerLevelListener.SetPowerLevel(powerLevel)
+		}
+	}
+}
+
 func NewClient(address string) (*HamlibClient, error) {
 	result := &HamlibClient{
 		address:         address,
@@ -99,8 +118,9 @@ func (c *HamlibClient) reconnect() error {
 	}
 
 	c.Conn.StartPolling(c.pollingInterval, c.pollingTimeout,
-		client.PollCommand(client.OnModeAndPassband(c.setModeAndPassband), "get_mode"),
-		client.PollCommand(client.OnFrequency(c.setFrequency), "get_freq"),
+		client.PollCommand(client.OnModeAndPassband(c.setModeAndPassband)),
+		client.PollCommand(client.OnFrequency(c.setFrequency)),
+		client.PollCommand(client.OnPowerLevel(c.setPowerLevel)),
 	)
 
 	c.Conn.WhenClosed(func() {
@@ -127,12 +147,16 @@ func (c *HamlibClient) Close() {
 	c.Conn.Close()
 }
 
-func (c *HamlibClient) setModeAndPassband(mode client.Mode, passband float64) {
+func (c *HamlibClient) setModeAndPassband(mode client.Mode, passband client.Frequency) {
 	NotifyModeListeners(c.listeners, mode)
 }
 
 func (c *HamlibClient) setFrequency(frequency client.Frequency) {
 	NotifyFrequencyListeners(c.listeners, frequency)
+}
+
+func (c *HamlibClient) setPowerLevel(powerLevel float64) {
+	NotifyPowerLevelListeners(c.listeners, powerLevel)
 }
 
 func (c *HamlibClient) Listen(listener interface{}) {

@@ -99,6 +99,26 @@ func ToInt(raw interface{}) (int, bool) {
 	}
 }
 
+func ToFloat(raw interface{}) (float64, bool) {
+	if raw == nil {
+		return 0, false
+	}
+	switch f := raw.(type) {
+	case int:
+		return float64(f), true
+	case float64:
+		return f, true
+	case string:
+		parsedF, err := strconv.ParseFloat(f, 64)
+		if err != nil {
+			return 0, false
+		}
+		return parsedF, true
+	default:
+		return 0, false
+	}
+}
+
 func ToString(raw interface{}) (string, bool) {
 	if raw == nil {
 		return "", false

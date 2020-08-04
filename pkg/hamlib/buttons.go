@@ -384,3 +384,93 @@ func (b *SwitchToBandButton) Pressed() {
 func (b *SwitchToBandButton) Released() {
 	// ignore
 }
+
+/*
+	SetPowerLevelButton
+*/
+
+func NewSetPowerLevelButton(hamlibClient *HamlibClient, label string, value float64) *SetPowerLevelButton {
+	result := &SetPowerLevelButton{
+		client:  hamlibClient,
+		enabled: true,
+		label:   label,
+		value:   value,
+	}
+
+	hamlibClient.Listen(result)
+
+	return result
+}
+
+type SetPowerLevelButton struct {
+	hamdeck.BaseButton
+	client        *HamlibClient
+	image         image.Image
+	selectedImage image.Image
+	enabled       bool
+	selected      bool
+	label         string
+	value         float64
+}
+
+func (b *SetPowerLevelButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.image = nil
+	b.selectedImage = nil
+	b.Invalidate()
+}
+
+func (b *SetPowerLevelButton) updateSelection() {
+	powerLevel, err := b.client.Conn.PowerLevel(context.Background())
+	if err != nil {
+		log.Printf("cannot retrieve current power level: %v", err)
+		return
+	}
+	b.SetPowerLevel(powerLevel)
+}
+
+func (b *SetPowerLevelButton) SetPowerLevel(powerLevel float64) {
+	wasSelected := b.selected
+	b.selected = (powerLevel == b.value)
+	if b.selected == wasSelected {
+		return
+	}
+	b.Invalidate()
+}
+
+func (b *SetPowerLevelButton) Image(gc hamdeck.GraphicContext) image.Image {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	if b.image == nil {
+		b.image = gc.DrawSingleLineTextButton(b.label)
+	}
+	if b.selectedImage == nil {
+		gc.SwapColors()
+		b.selectedImage = gc.DrawSingleLineTextButton(b.label)
+	}
+	if b.selected {
+		return b.selectedImage
+	}
+	return b.image
+}
+
+func (b *SetPowerLevelButton) Pressed() {
+	if !b.enabled {
+		return
+	}
+	ctx := context.Background()
+	err := b.client.Conn.SetPowerLevel(ctx, b.value)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func (b *SetPowerLevelButton) Released() {
+	// ignore
+}
