@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"log/syslog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,6 +18,7 @@ import (
 )
 
 var rootFlags = struct {
+	syslog        bool
 	serial        string
 	brightness    int
 	configFile    string
@@ -36,6 +38,7 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().BoolVar(&rootFlags.syslog, "syslog", false, "use syslog for logging")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.serial, "serial", "", "the serial number of the Stream Deck device that should be used")
 	rootCmd.PersistentFlags().IntVar(&rootFlags.brightness, "brightness", 100, "the initial brightness of the Stream Deck device")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.configFile, "config", "", "the configuration file that should be used (default: .config/hamradio/conf.json)")
@@ -44,6 +47,14 @@ func init() {
 
 func run(cmd *cobra.Command, args []string) {
 	shutdown := monitorShutdownSignals()
+
+	if rootFlags.syslog {
+		logger, err := syslog.NewLogger(syslog.LOG_INFO, 0)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.SetOutput(logger.Writer())
+	}
 
 	device, err := streamdeck.Open(rootFlags.serial)
 	if err != nil {
