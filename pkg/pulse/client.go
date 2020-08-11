@@ -178,6 +178,10 @@ func (c *PulseClient) Close() {
 	}
 }
 
+func (c *PulseClient) Connected() bool {
+	return c.connected
+}
+
 func (c *PulseClient) Listen(listener interface{}) {
 	c.listeners = append(c.listeners, listener)
 }

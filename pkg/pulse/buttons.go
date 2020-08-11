@@ -8,28 +8,15 @@ import (
 )
 
 func NewToggleMuteButton(client *PulseClient, sinkID, sourceID string, label string) *ToggleMuteButton {
-	var muted bool
-	var err error
-	if sinkID != "" {
-		muted, err = client.IsSinkMuted(sinkID)
-		if err != nil {
-			log.Print(err)
-		}
-	} else if sourceID != "" {
-		muted, err = client.IsSourceMuted(sourceID)
-		if err != nil {
-			log.Print(err)
-		}
-	}
-
 	result := &ToggleMuteButton{
 		client:   client,
 		sinkID:   sinkID,
 		sourceID: sourceID,
 		label:    label,
-		enabled:  true,
-		muted:    muted,
+		enabled:  client.Connected(),
 	}
+
+	result.updateSelection()
 	client.Listen(result)
 
 	return result
@@ -47,13 +34,6 @@ type ToggleMuteButton struct {
 	unmutedImage image.Image
 }
 
-func (b *ToggleMuteButton) SetMute(id string, mute bool) {
-	if id == b.sinkID || id == b.sourceID {
-		b.muted = mute
-		b.Invalidate()
-	}
-}
-
 func (b *ToggleMuteButton) Enable(enabled bool) {
 	if enabled == b.enabled {
 		return
@@ -62,6 +42,37 @@ func (b *ToggleMuteButton) Enable(enabled bool) {
 	b.mutedImage = nil
 	b.unmutedImage = nil
 	b.Invalidate()
+}
+
+func (b *ToggleMuteButton) updateSelection() {
+	if !b.client.Connected() {
+		b.Enable(false)
+		return
+	}
+
+	var id string
+	var muted bool
+	var err error
+	if b.sinkID != "" {
+		id = b.sinkID
+		muted, err = b.client.IsSinkMuted(b.sinkID)
+	} else if b.sourceID != "" {
+		id = b.sourceID
+		muted, err = b.client.IsSourceMuted(b.sourceID)
+	}
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	b.SetMute(id, muted)
+}
+
+func (b *ToggleMuteButton) SetMute(id string, mute bool) {
+	if id == b.sinkID || id == b.sourceID {
+		b.muted = mute
+		b.Invalidate()
+	}
 }
 
 func (b *ToggleMuteButton) Image(gc hamdeck.GraphicContext) image.Image {
