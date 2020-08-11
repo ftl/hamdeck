@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"io"
+	"log"
 	"time"
 )
 
@@ -153,7 +154,8 @@ MainLoop:
 		select {
 		case key, ok := <-keys:
 			if !ok {
-				return fmt.Errorf("the Stream Deck device closed the connection")
+				log.Print("The Stream Deck device closed the connection.")
+				return nil
 			}
 			d.handleKey(key)
 		case <-flashTicker.C:

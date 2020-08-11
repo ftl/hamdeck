@@ -87,6 +87,8 @@ func run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	<-shutdown
 }
 
 func monitorShutdownSignals() <-chan struct{} {
