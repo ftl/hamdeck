@@ -51,6 +51,11 @@ func (b *SetModeButton) Enable(enabled bool) {
 }
 
 func (b *SetModeButton) updateSelection() {
+	if !b.client.Connected() {
+		b.Enable(false)
+		return
+	}
+
 	mode, _, err := b.client.Conn.ModeAndPassband(context.Background())
 	if err != nil {
 		log.Printf("cannot retrieve current mode: %v", err)
@@ -147,6 +152,11 @@ func (b *ToggleModeButton) Enable(enabled bool) {
 }
 
 func (b *ToggleModeButton) updateSelection() {
+	if !b.client.Connected() {
+		b.Enable(false)
+		return
+	}
+
 	mode, _, err := b.client.Conn.ModeAndPassband(context.Background())
 	if err != nil {
 		log.Printf("cannot retrieve current mode: %v", err)
@@ -303,6 +313,7 @@ func NewSwitchToBandButton(hamlibClient *HamlibClient, label string, bandName st
 		band:    band,
 	}
 
+	result.updateSelection()
 	hamlibClient.Listen(result)
 
 	return result
@@ -330,6 +341,11 @@ func (b *SwitchToBandButton) Enable(enabled bool) {
 }
 
 func (b *SwitchToBandButton) updateSelection() {
+	if !b.client.Connected() {
+		b.Enable(false)
+		return
+	}
+
 	frequency, err := b.client.Conn.Frequency(context.Background())
 	if err != nil {
 		log.Printf("cannot retrieve current frequency: %v", err)
@@ -397,6 +413,7 @@ func NewSetPowerLevelButton(hamlibClient *HamlibClient, label string, value floa
 		value:   value,
 	}
 
+	result.updateSelection()
 	hamlibClient.Listen(result)
 
 	return result
@@ -424,6 +441,11 @@ func (b *SetPowerLevelButton) Enable(enabled bool) {
 }
 
 func (b *SetPowerLevelButton) updateSelection() {
+	if !b.client.Connected() {
+		b.Enable(false)
+		return
+	}
+
 	powerLevel, err := b.client.Conn.PowerLevel(context.Background())
 	if err != nil {
 		log.Printf("cannot retrieve current power level: %v", err)
@@ -490,6 +512,7 @@ func NewMOXButton(hamlibClient *HamlibClient, label string) *MOXButton {
 		label:   label,
 	}
 
+	result.updateSelection()
 	hamlibClient.Listen(result)
 
 	return result
@@ -518,6 +541,11 @@ func (b *MOXButton) Enable(enabled bool) {
 }
 
 func (b *MOXButton) updateSelection() {
+	if !b.client.Connected() {
+		b.Enable(false)
+		return
+	}
+
 	ptt, err := b.client.Conn.PTT(context.Background())
 	if err != nil {
 		log.Printf("cannot retrieve current PTT state: %v", err)

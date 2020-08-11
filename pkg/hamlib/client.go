@@ -103,19 +103,14 @@ func NotifyPTTListeners(listeners []interface{}, ptt client.PTT) {
 	}
 }
 
-func NewClient(address string) (*HamlibClient, error) {
-	result := &HamlibClient{
+func NewClient(address string) *HamlibClient {
+	return &HamlibClient{
 		address:         address,
 		pollingInterval: 500 * time.Millisecond,
 		pollingTimeout:  2 * time.Second,
+		retryInterval:   5 * time.Second,
+		done:            make(chan struct{}),
 	}
-
-	err := result.reconnect()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }
 
 type HamlibClient struct {
@@ -124,17 +119,59 @@ type HamlibClient struct {
 	address         string
 	pollingInterval time.Duration
 	pollingTimeout  time.Duration
+	retryInterval   time.Duration
+	connected       bool
+	closed          chan struct{}
+	done            chan struct{}
 
 	listeners []interface{}
 }
 
-func (c *HamlibClient) reconnect() error {
+func (c *HamlibClient) KeepOpen() {
+	go func() {
+		disconnected := make(chan bool, 1)
+		for {
+			err := c.connect(func() {
+				disconnected <- true
+			})
+			if err == nil {
+				select {
+				case <-disconnected:
+					log.Print("Connection lost to Hamlib, waiting for retry.")
+				case <-c.done:
+					log.Print("Connection to Hamlib closed.")
+					return
+				}
+			} else {
+				log.Printf("Cannot connect to Hamlib, waiting for retry: %v", err)
+			}
+
+			select {
+			case <-time.After(c.retryInterval):
+				log.Print("Retrying to connect to Hamlib")
+			case <-c.done:
+				log.Print("Connection to Hamlib closed.")
+				return
+			}
+		}
+	}()
+}
+
+func (c *HamlibClient) Connect() error {
+	return c.connect(nil)
+}
+
+func (c *HamlibClient) connect(whenClosed func()) error {
 	var err error
 
 	c.Conn, err = client.Open(c.address)
 	if err != nil {
 		return err
 	}
+
+	c.closed = make(chan struct{})
+	c.connected = true
+	hamdeck.NotifyEnablers(c.listeners, true)
 
 	c.Conn.StartPolling(c.pollingInterval, c.pollingTimeout,
 		client.PollCommand(client.OnModeAndPassband(c.setModeAndPassband)),
@@ -144,27 +181,29 @@ func (c *HamlibClient) reconnect() error {
 	)
 
 	c.Conn.WhenClosed(func() {
-		log.Print("connection to hamlib lost, trying to reconnect")
+		c.connected = false
 		hamdeck.NotifyEnablers(c.listeners, false)
-		retry := 1
-		for {
-			time.Sleep(2 * time.Second)
-			err = c.reconnect()
-			if err == nil {
-				log.Printf("reconnected to hamlib after #%d retries", retry)
-				hamdeck.NotifyEnablers(c.listeners, true)
-				return
-			}
-			log.Printf("reconnect to hamlib failed, waiting until next retry: %v", err)
-			retry++
+
+		if whenClosed != nil {
+			whenClosed()
 		}
+
+		close(c.closed)
 	})
 
 	return nil
 }
 
 func (c *HamlibClient) Close() {
-	c.Conn.Close()
+	close(c.done)
+	if c.connected {
+		c.Conn.Close()
+		<-c.closed
+	}
+}
+
+func (c *HamlibClient) Connected() bool {
+	return c.connected
 }
 
 func (c *HamlibClient) setModeAndPassband(mode client.Mode, passband client.Frequency) {

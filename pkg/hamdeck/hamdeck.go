@@ -207,7 +207,6 @@ type BaseButton struct {
 
 func (b *BaseButton) Invalidate() {
 	if b.ctx == nil {
-		log.Print("not attached")
 		return
 	}
 	b.ctx.Invalidate()

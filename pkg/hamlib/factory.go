@@ -31,10 +31,8 @@ const (
 )
 
 func NewButtonFactory(address string) (*Factory, error) {
-	client, err := NewClient(address)
-	if err != nil {
-		return nil, err
-	}
+	client := NewClient(address)
+	client.KeepOpen()
 
 	return &Factory{
 		client: client,
