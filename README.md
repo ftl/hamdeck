@@ -5,7 +5,7 @@ HamDeck allows you to control and automate your ham radio station using an Elgat
 * Toggle the mute state of a pulseaudio sink our source.
 * Call any simple hamlib set command (e.g. `vfo_op BAND_UP`).
 * Set the mode of your radio through hamlib.
-* Switch to a specific frequency band through hamlib.
+* Switch to a specific frequency band through hamlib (if `vfo_op BAND_UP/BAND_DOWN` is supported by your radio).
 * Set the output power level of your radio through hamlib.
 * Control the TX state (MOX) of your radio through hamlib.
 
@@ -23,6 +23,52 @@ To build the `hamdeck` binary simply run
 
 ```
 go build
+```
+
+## Install
+
+The following describes the steps how to install `hamdeck` on an Ubuntu 20.04 LTS (Focal Fossa) to start automatically when you plug-in your the Stream Deck device.
+
+1. Installing the binary:
+
+```
+go install github.com/ftl/hamdeck
+which hamdeck
+```
+
+The last command will give you the path to the installed binary, which you will need later.
+
+2. Adding UDEV rules for the stream deck
+
+Create `/etc/udev/rules.d/99-streamdeck.rules` with the following content:
+
+```
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev", SYMLINK="streamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev", SYMLINK="streamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev", SYMLINK="streamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev", SYMLINK="streamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
+
+ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="fd9/60/*", TAG+="systemd"
+ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="fd9/63/*", TAG+="systemd"
+ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="fd9/6c/*", TAG+="systemd"
+ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="fd9/6d/*", TAG+="systemd"
+```
+
+(See [systemd devices](https://www.freedesktop.org/software/systemd/man/systemd.device.html) and [systemd #7587](https://github.com/systemd/systemd/issues/7587) for a little bit of background about the UDEV rules.)
+
+3. Adding a service definition for `hamdeck`
+
+Create `/etc/systemd/system/hamdeck.service` with the following content:
+
+```
+[Unit]
+Description=HamDeck
+After=syslog.target dev-streamdeck.device
+BindsTo=dev-streamdeck.device
+
+[Service]
+ExecStart=<hamdeck binary, see above> --syslog --config=<your config file>
+User=<your username>
 ```
 
 ## Disclaimer
