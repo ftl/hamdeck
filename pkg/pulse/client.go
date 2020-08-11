@@ -57,7 +57,7 @@ func (f MuteListenerFunc) SetMute(id string, mute bool) {
 	f(id, mute)
 }
 
-func NewClient() (*PulseClient, error) {
+func NewClient() *PulseClient {
 	result := &PulseClient{
 		props: proto.PropList{
 			"media.name":                 proto.PropListString("HamDeck Audio Control"),
@@ -68,16 +68,13 @@ func NewClient() (*PulseClient, error) {
 			"window.x11.display":         proto.PropListString(os.Getenv("DISPLAY")),
 		},
 		subscribeEvents: make(chan *proto.SubscribeEvent, 100),
-	}
-
-	err := result.reconnect()
-	if err != nil {
-		return nil, err
+		retryInterval:   5 * time.Second,
+		done:            make(chan struct{}),
 	}
 
 	go result.handleSubscribeEvents()
 
-	return result, nil
+	return result
 }
 
 type PulseClient struct {
@@ -85,10 +82,50 @@ type PulseClient struct {
 	client          *proto.Client
 	props           proto.PropList
 	subscribeEvents chan *proto.SubscribeEvent
-	listeners       []interface{}
+
+	retryInterval           time.Duration
+	connected               bool
+	onPulseConnectionClosed func()
+	done                    chan struct{}
+
+	listeners []interface{}
 }
 
-func (c *PulseClient) reconnect() error {
+func (c *PulseClient) KeepOpen() {
+	go func() {
+		disconnected := make(chan bool, 1)
+		for {
+			err := c.connect(func() {
+				disconnected <- true
+			})
+			if err == nil {
+				select {
+				case <-disconnected:
+					log.Print("Connection lost to pulseaudio, waiting for retry.")
+				case <-c.done:
+					log.Print("Connection to pulseaudio closed.")
+					return
+				}
+			} else {
+				log.Printf("Cannot connect to pulseaudio, waiting for retry: %v", err)
+			}
+
+			select {
+			case <-time.After(c.retryInterval):
+				log.Print("Retrying to connect to pulseaudio")
+			case <-c.done:
+				log.Print("Connection to pulseaudio closed.")
+				return
+			}
+		}
+	}()
+}
+
+func (c *PulseClient) Connect() error {
+	return c.connect(nil)
+}
+
+func (c *PulseClient) connect(whenClosed func()) error {
 	var err error
 	c.client, c.conn, err = proto.Connect("")
 	if err != nil {
@@ -108,6 +145,10 @@ func (c *PulseClient) reconnect() error {
 		return fmt.Errorf("cannot subscribe to sink and source events: %w", err)
 	}
 
+	c.connected = true
+	hamdeck.NotifyEnablers(c.listeners, true)
+	log.Print("Connected to pulseaudio.")
+
 	c.client.Callback = func(msg interface{}) {
 		switch msg := msg.(type) {
 		case *proto.SubscribeEvent:
@@ -117,27 +158,24 @@ func (c *PulseClient) reconnect() error {
 		}
 	}
 
-	c.client.OnConnectionClosed = func() {
-		log.Print("connection to pulseaudio lost, trying to reconnect")
+	c.onPulseConnectionClosed = func() {
+		c.connected = false
 		hamdeck.NotifyEnablers(c.listeners, false)
-		retry := 1
-		for {
-			time.Sleep(2 * time.Second)
-			err = c.reconnect()
-			if err == nil {
-				log.Printf("reconnected to pulseaudio after #%d retries", retry)
-				hamdeck.NotifyEnablers(c.listeners, true)
-				return
-			}
-			log.Printf("reconnect to pulseaudio failed, waiting until next retry: %v", err)
-			retry++
+
+		if whenClosed != nil {
+			whenClosed()
 		}
 	}
+	c.client.OnConnectionClosed = c.onPulseConnectionClosed
 	return nil
 }
 
 func (c *PulseClient) Close() {
-	c.conn.Close()
+	close(c.done)
+	if c.connected {
+		c.conn.Close()
+		c.onPulseConnectionClosed()
+	}
 }
 
 func (c *PulseClient) Listen(listener interface{}) {

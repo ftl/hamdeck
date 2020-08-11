@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"io"
-	"log"
 	"time"
 )
 
@@ -81,13 +80,6 @@ func NotifyEnablers(listeners []interface{}, enabled bool) {
 type ButtonFactory interface {
 	Close()
 	CreateButton(config map[string]interface{}) Button
-}
-
-func FactoryMust(factory ButtonFactory, err error) ButtonFactory {
-	if err != nil {
-		log.Fatal(err)
-	}
-	return factory
 }
 
 type HamDeck struct {

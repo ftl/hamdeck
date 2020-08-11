@@ -30,13 +30,13 @@ const (
 	MOXButtonType           = "hamlib.MOX"
 )
 
-func NewButtonFactory(address string) (*Factory, error) {
+func NewButtonFactory(address string) *Factory {
 	client := NewClient(address)
 	client.KeepOpen()
 
 	return &Factory{
 		client: client,
-	}, nil
+	}
 }
 
 type Factory struct {

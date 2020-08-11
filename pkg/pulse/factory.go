@@ -12,15 +12,13 @@ const (
 	ToggleMuteButtonType = "pulse.ToggleMute"
 )
 
-func NewButtonFactory() (*Factory, error) {
-	client, err := NewClient()
-	if err != nil {
-		return nil, err
-	}
+func NewButtonFactory() *Factory {
+	client := NewClient()
+	client.KeepOpen()
 
 	return &Factory{
 		client: client,
-	}, nil
+	}
 }
 
 type Factory struct {

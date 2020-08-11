@@ -64,8 +64,8 @@ func run(cmd *cobra.Command, args []string) {
 	device.SetBrightness(rootFlags.brightness)
 
 	deck := hamdeck.New(device)
-	deck.RegisterFactory(hamdeck.FactoryMust(pulse.NewButtonFactory()))
-	deck.RegisterFactory(hamdeck.FactoryMust(hamlib.NewButtonFactory(rootFlags.hamlibAddress)))
+	deck.RegisterFactory(pulse.NewButtonFactory())
+	deck.RegisterFactory(hamlib.NewButtonFactory(rootFlags.hamlibAddress))
 
 	err = configureHamDeck(deck, rootFlags.configFile)
 	if err != nil {
