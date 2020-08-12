@@ -44,9 +44,7 @@ func (b *SetModeButton) Enable(enabled bool) {
 		return
 	}
 	b.enabled = enabled
-	b.image = nil
-	b.selectedImage = nil
-	b.Invalidate()
+	b.Invalidate(true)
 }
 
 func (b *SetModeButton) SetMode(mode client.Mode) {
@@ -55,10 +53,20 @@ func (b *SetModeButton) SetMode(mode client.Mode) {
 	if b.selected == wasSelected {
 		return
 	}
-	b.Invalidate()
+	b.Invalidate(false)
 }
 
-func (b *SetModeButton) Image(gc hamdeck.GraphicContext) image.Image {
+func (b *SetModeButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.image == nil || b.selectedImage == nil || redrawImages {
+		b.redrawImages(gc)
+	}
+	if b.selected {
+		return b.selectedImage
+	}
+	return b.image
+}
+
+func (b *SetModeButton) redrawImages(gc hamdeck.GraphicContext) {
 	if b.enabled {
 		gc.SetForeground(hamdeck.White)
 	} else {
@@ -68,17 +76,9 @@ func (b *SetModeButton) Image(gc hamdeck.GraphicContext) image.Image {
 	if b.label != "" {
 		text = b.label
 	}
-	if b.image == nil {
-		b.image = gc.DrawSingleLineTextButton(text)
-	}
-	if b.selectedImage == nil {
-		gc.SwapColors()
-		b.selectedImage = gc.DrawSingleLineTextButton(text)
-	}
-	if b.selected {
-		return b.selectedImage
-	}
-	return b.image
+	b.image = gc.DrawSingleLineTextButton(text)
+	gc.SwapColors()
+	b.selectedImage = gc.DrawSingleLineTextButton(text)
 }
 
 func (b *SetModeButton) Pressed() {
@@ -130,9 +130,7 @@ func (b *ToggleModeButton) Enable(enabled bool) {
 		return
 	}
 	b.enabled = enabled
-	b.image = nil
-	b.selectedImage = nil
-	b.Invalidate()
+	b.Invalidate(true)
 }
 
 func (b *ToggleModeButton) SetMode(mode client.Mode) {
@@ -147,17 +145,23 @@ func (b *ToggleModeButton) SetMode(mode client.Mode) {
 			break
 		}
 	}
-
 	if (b.selected == wasSelected) && (b.currentMode == lastMode) {
 		return
 	}
-
-	b.image = nil
-	b.selectedImage = nil
-	b.Invalidate()
+	b.Invalidate(true)
 }
 
-func (b *ToggleModeButton) Image(gc hamdeck.GraphicContext) image.Image {
+func (b *ToggleModeButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.image == nil || b.selectedImage == nil || redrawImages {
+		b.redrawImages(gc)
+	}
+	if b.selected {
+		return b.selectedImage
+	}
+	return b.image
+}
+
+func (b *ToggleModeButton) redrawImages(gc hamdeck.GraphicContext) {
 	if b.enabled {
 		gc.SetForeground(hamdeck.White)
 	} else {
@@ -170,17 +174,9 @@ func (b *ToggleModeButton) Image(gc hamdeck.GraphicContext) image.Image {
 			text[i] = b.labels[i]
 		}
 	}
-	if b.image == nil {
-		b.image = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
-	}
-	if b.selectedImage == nil {
-		gc.SwapColors()
-		b.selectedImage = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
-	}
-	if b.selected {
-		return b.selectedImage
-	}
-	return b.image
+	b.image = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
+	gc.SwapColors()
+	b.selectedImage = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
 }
 
 func (b *ToggleModeButton) Pressed() {
@@ -235,17 +231,16 @@ func (b *SetButton) Enable(enabled bool) {
 		return
 	}
 	b.enabled = enabled
-	b.image = nil
-	b.Invalidate()
+	b.Invalidate(true)
 }
 
-func (b *SetButton) Image(gc hamdeck.GraphicContext) image.Image {
-	if b.enabled {
-		gc.SetForeground(hamdeck.White)
-	} else {
-		gc.SetForeground(hamdeck.DisabledGray)
-	}
-	if b.image == nil {
+func (b *SetButton) Image(gc hamdeck.GraphicContext, redrawImage bool) image.Image {
+	if b.image == nil || redrawImage {
+		if b.enabled {
+			gc.SetForeground(hamdeck.White)
+		} else {
+			gc.SetForeground(hamdeck.DisabledGray)
+		}
 		b.image = gc.DrawSingleLineTextButton(b.label)
 	}
 	return b.image
@@ -304,9 +299,7 @@ func (b *SwitchToBandButton) Enable(enabled bool) {
 		return
 	}
 	b.enabled = enabled
-	b.image = nil
-	b.selectedImage = nil
-	b.Invalidate()
+	b.Invalidate(true)
 }
 
 func (b *SwitchToBandButton) SetFrequency(frequency client.Frequency) {
@@ -315,10 +308,20 @@ func (b *SwitchToBandButton) SetFrequency(frequency client.Frequency) {
 	if b.selected == wasSelected {
 		return
 	}
-	b.Invalidate()
+	b.Invalidate(false)
 }
 
-func (b *SwitchToBandButton) Image(gc hamdeck.GraphicContext) image.Image {
+func (b *SwitchToBandButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.image == nil || b.selectedImage == nil || redrawImages {
+		b.redrawImages(gc)
+	}
+	if b.selected {
+		return b.selectedImage
+	}
+	return b.image
+}
+
+func (b *SwitchToBandButton) redrawImages(gc hamdeck.GraphicContext) {
 	if b.enabled {
 		gc.SetForeground(hamdeck.White)
 	} else {
@@ -328,17 +331,9 @@ func (b *SwitchToBandButton) Image(gc hamdeck.GraphicContext) image.Image {
 	if b.label != "" {
 		text = b.label
 	}
-	if b.image == nil {
-		b.image = gc.DrawSingleLineTextButton(text)
-	}
-	if b.selectedImage == nil {
-		gc.SwapColors()
-		b.selectedImage = gc.DrawSingleLineTextButton(text)
-	}
-	if b.selected {
-		return b.selectedImage
-	}
-	return b.image
+	b.image = gc.DrawSingleLineTextButton(text)
+	gc.SwapColors()
+	b.selectedImage = gc.DrawSingleLineTextButton(text)
 }
 
 func (b *SwitchToBandButton) Pressed() {
@@ -389,9 +384,7 @@ func (b *SetPowerLevelButton) Enable(enabled bool) {
 		return
 	}
 	b.enabled = enabled
-	b.image = nil
-	b.selectedImage = nil
-	b.Invalidate()
+	b.Invalidate(true)
 }
 
 func (b *SetPowerLevelButton) SetPowerLevel(powerLevel float64) {
@@ -400,26 +393,28 @@ func (b *SetPowerLevelButton) SetPowerLevel(powerLevel float64) {
 	if b.selected == wasSelected {
 		return
 	}
-	b.Invalidate()
+	b.Invalidate(false)
 }
 
-func (b *SetPowerLevelButton) Image(gc hamdeck.GraphicContext) image.Image {
-	if b.enabled {
-		gc.SetForeground(hamdeck.White)
-	} else {
-		gc.SetForeground(hamdeck.DisabledGray)
-	}
-	if b.image == nil {
-		b.image = gc.DrawSingleLineTextButton(b.label)
-	}
-	if b.selectedImage == nil {
-		gc.SwapColors()
-		b.selectedImage = gc.DrawSingleLineTextButton(b.label)
+func (b *SetPowerLevelButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.image == nil || b.selectedImage == nil || redrawImages {
+		b.redrawImages(gc)
 	}
 	if b.selected {
 		return b.selectedImage
 	}
 	return b.image
+}
+
+func (b *SetPowerLevelButton) redrawImages(gc hamdeck.GraphicContext) {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	b.image = gc.DrawSingleLineTextButton(b.label)
+	gc.SwapColors()
+	b.selectedImage = gc.DrawSingleLineTextButton(b.label)
 }
 
 func (b *SetPowerLevelButton) Pressed() {
@@ -474,18 +469,16 @@ func (b *MOXButton) Enable(enabled bool) {
 		return
 	}
 	b.enabled = enabled
-	b.image = nil
-	b.selectedImage = nil
-	b.Invalidate()
+	b.flashOn = false
+	b.Invalidate(true)
 }
 
 func (b *MOXButton) Flash(flashOn bool) {
-	if !b.selected {
+	if !(b.selected && b.enabled) {
 		return
 	}
-
 	b.flashOn = flashOn
-	b.Invalidate()
+	b.Invalidate(false)
 }
 
 func (b *MOXButton) SetPTT(ptt client.PTT) {
@@ -494,25 +487,12 @@ func (b *MOXButton) SetPTT(ptt client.PTT) {
 	if b.selected == wasSelected {
 		return
 	}
-	b.Invalidate()
+	b.Invalidate(false)
 }
 
-func (b *MOXButton) Image(gc hamdeck.GraphicContext) image.Image {
-	if b.enabled {
-		gc.SetForeground(hamdeck.White)
-	} else {
-		gc.SetForeground(hamdeck.DisabledGray)
-	}
-	if b.image == nil {
-		b.image = gc.DrawSingleLineTextButton(b.label)
-	}
-	if b.flashImage == nil {
-		gc.SetBackground(hamdeck.Red)
-		b.flashImage = gc.DrawSingleLineTextButton(b.label)
-	}
-	if b.selectedImage == nil {
-		gc.SwapColors()
-		b.selectedImage = gc.DrawSingleLineTextButton(b.label)
+func (b *MOXButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.image == nil || b.flashImage == nil || b.selectedImage == nil || redrawImages {
+		b.redrawImages(gc)
 	}
 	if !b.selected {
 		return b.image
@@ -521,6 +501,19 @@ func (b *MOXButton) Image(gc hamdeck.GraphicContext) image.Image {
 		return b.flashImage
 	}
 	return b.selectedImage
+}
+
+func (b *MOXButton) redrawImages(gc hamdeck.GraphicContext) {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	b.image = gc.DrawSingleLineTextButton(b.label)
+	gc.SetBackground(hamdeck.Red)
+	b.flashImage = gc.DrawSingleLineTextButton(b.label)
+	gc.SwapColors()
+	b.selectedImage = gc.DrawSingleLineTextButton(b.label)
 }
 
 func (b *MOXButton) Pressed() {

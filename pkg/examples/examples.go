@@ -24,29 +24,31 @@ type HelloTextButton struct {
 	worldImage image.Image
 }
 
-func (b *HelloTextButton) Image(gc hamdeck.GraphicContext) image.Image {
-	if b.helloImage == nil {
-		b.helloImage = gc.DrawSingleLineTextButton("Hello")
+func (b *HelloTextButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.helloImage == nil || b.worldImage == nil || redrawImages {
+		b.redrawImages(gc)
 	}
-	if b.worldImage == nil {
-		b.worldImage = gc.DrawSingleLineTextButton("World")
-	}
+	return b.image
+}
+
+func (b *HelloTextButton) redrawImages(gc hamdeck.GraphicContext) {
+	b.helloImage = gc.DrawSingleLineTextButton("Hello")
+	b.worldImage = gc.DrawSingleLineTextButton("World")
 	if b.image == nil {
 		b.image = b.helloImage
 	}
-	return b.image
 }
 
 func (b *HelloTextButton) Pressed() {
 	log.Print("Hello World pressed")
 	b.image = b.worldImage
-	b.Invalidate()
+	b.Invalidate(false)
 }
 
 func (b *HelloTextButton) Released() {
 	log.Print("Hello World released")
 	b.image = b.helloImage
-	b.Invalidate()
+	b.Invalidate(false)
 }
 
 /*
@@ -87,8 +89,8 @@ func (b *ToggleBrightnessButton) setBrightness(brightness int) {
 	}
 }
 
-func (b *ToggleBrightnessButton) Image(gc hamdeck.GraphicContext) image.Image {
-	if b.image == nil {
+func (b *ToggleBrightnessButton) Image(gc hamdeck.GraphicContext, redrawImage bool) image.Image {
+	if b.image == nil || redrawImage {
 		b.image = gc.DrawSingleLineTextButton(fmt.Sprintf("%d", b.brightness))
 	}
 	return b.image
@@ -97,8 +99,7 @@ func (b *ToggleBrightnessButton) Image(gc hamdeck.GraphicContext) image.Image {
 func (b *ToggleBrightnessButton) Pressed() {
 	b.setBrightness(b.brightness + b.step)
 	b.device.SetBrightness(b.brightness)
-	b.image = nil
-	b.Invalidate()
+	b.Invalidate(true)
 }
 
 func (b *ToggleBrightnessButton) Released() {
@@ -128,11 +129,9 @@ type PowerButton struct {
 
 type Switch func(on bool)
 
-func (b *PowerButton) Image(gc hamdeck.GraphicContext) image.Image {
-	if b.onImage == nil {
+func (b *PowerButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.onImage == nil || b.offImage == nil || redrawImages {
 		b.onImage = b.drawPowerIcon(gc, hamdeck.Yellow, hamdeck.Black)
-	}
-	if b.offImage == nil {
 		b.offImage = b.drawPowerIcon(gc, hamdeck.White, hamdeck.Black)
 	}
 
@@ -158,7 +157,7 @@ func (b *PowerButton) Pressed() {
 	if b.callback != nil {
 		b.callback(b.on)
 	}
-	b.Invalidate()
+	b.Invalidate(false)
 }
 
 func (b *PowerButton) Released() {
@@ -194,8 +193,7 @@ func (b *CountingButton) Reset() {
 }
 
 func (b *CountingButton) Invalidate() {
-	b.image = nil
-	b.BaseButton.Invalidate()
+	b.BaseButton.Invalidate(true)
 }
 
 func (b *CountingButton) Flash(flashOn bool) {
@@ -206,8 +204,8 @@ func (b *CountingButton) Flash(flashOn bool) {
 	b.Invalidate()
 }
 
-func (b *CountingButton) Image(gc hamdeck.GraphicContext) image.Image {
-	if b.image == nil {
+func (b *CountingButton) Image(gc hamdeck.GraphicContext, redrawImage bool) image.Image {
+	if b.image == nil || redrawImage {
 		gc.SetForeground(hamdeck.Red)
 		if b.Flashing && b.flashOn {
 			gc.SetBackground(hamdeck.Yellow)

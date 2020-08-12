@@ -39,9 +39,7 @@ func (b *ToggleMuteButton) Enable(enabled bool) {
 		return
 	}
 	b.enabled = enabled
-	b.mutedImage = nil
-	b.unmutedImage = nil
-	b.Invalidate()
+	b.Invalidate(true)
 }
 
 func (b *ToggleMuteButton) updateSelection() {
@@ -71,28 +69,29 @@ func (b *ToggleMuteButton) updateSelection() {
 func (b *ToggleMuteButton) SetMute(id string, mute bool) {
 	if id == b.sinkID || id == b.sourceID {
 		b.muted = mute
-		b.Invalidate()
+		b.Invalidate(false)
 	}
 }
 
-func (b *ToggleMuteButton) Image(gc hamdeck.GraphicContext) image.Image {
+func (b *ToggleMuteButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.mutedImage == nil || b.unmutedImage == nil || redrawImages {
+		b.redrawImages(gc)
+	}
+	if b.muted {
+		return b.mutedImage
+	}
+	return b.unmutedImage
+}
+
+func (b *ToggleMuteButton) redrawImages(gc hamdeck.GraphicContext) {
 	gc.SetFontSize(16)
 	if b.enabled {
 		gc.SetForeground(hamdeck.White)
 	} else {
 		gc.SetForeground(hamdeck.DisabledGray)
 	}
-	if b.mutedImage == nil {
-		b.mutedImage = gc.DrawIconLabelButton(gc.LoadIconAsset("volume_off.png"), b.label)
-	}
-	if b.unmutedImage == nil {
-		b.unmutedImage = gc.DrawIconLabelButton(gc.LoadIconAsset("volume_up.png"), b.label)
-	}
-
-	if b.muted {
-		return b.mutedImage
-	}
-	return b.unmutedImage
+	b.mutedImage = gc.DrawIconLabelButton(gc.LoadIconAsset("volume_off.png"), b.label)
+	b.unmutedImage = gc.DrawIconLabelButton(gc.LoadIconAsset("volume_up.png"), b.label)
 }
 
 func (b *ToggleMuteButton) Pressed() {

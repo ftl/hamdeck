@@ -48,11 +48,11 @@ type GraphicContext interface {
 }
 
 type ButtonContext interface {
-	Invalidate()
+	Invalidate(bool)
 }
 
 type Button interface {
-	Image(GraphicContext) image.Image
+	Image(GraphicContext, bool) image.Image
 	Pressed()
 	Released()
 	Attached(ButtonContext)
@@ -105,7 +105,7 @@ func New(device Device) *HamDeck {
 	}
 
 	result.device.Clear()
-	result.RedrawAll()
+	result.RedrawAll(true)
 
 	return result
 }
@@ -114,16 +114,16 @@ func (d *HamDeck) RegisterFactory(factory ButtonFactory) {
 	d.factories = append(d.factories, factory)
 }
 
-func (d *HamDeck) RedrawAll() {
+func (d *HamDeck) RedrawAll(redrawImages bool) {
 	for i, b := range d.buttons {
 		d.gc.Reset()
-		d.device.SetImage(i, b.Image(d.gc))
+		d.device.SetImage(i, b.Image(d.gc, redrawImages))
 	}
 }
 
-func (d *HamDeck) Redraw(index int) {
+func (d *HamDeck) Redraw(index int, redrawImages bool) {
 	d.gc.Reset()
-	d.device.SetImage(index, d.buttons[index].Image(d.gc))
+	d.device.SetImage(index, d.buttons[index].Image(d.gc, redrawImages))
 }
 
 func (d *HamDeck) Attach(index int, button Button) {
@@ -131,13 +131,13 @@ func (d *HamDeck) Attach(index int, button Button) {
 
 	ctx := &buttonContext{index: index, deck: d}
 	button.Attached(ctx)
-	d.Redraw(index)
+	d.Redraw(index, true)
 }
 
 func (d *HamDeck) Detach(index int) {
 	d.buttons[index].Detached()
 	d.buttons[index] = d.noButton
-	d.Redraw(index)
+	d.Redraw(index, true)
 }
 
 func (d *HamDeck) Run(stop <-chan struct{}) error {
@@ -199,11 +199,11 @@ type BaseButton struct {
 	ctx ButtonContext
 }
 
-func (b *BaseButton) Invalidate() {
+func (b *BaseButton) Invalidate(redrawImages bool) {
 	if b.ctx == nil {
 		return
 	}
-	b.ctx.Invalidate()
+	b.ctx.Invalidate(redrawImages)
 }
 
 func (b *BaseButton) Attached(ctx ButtonContext) {
@@ -218,7 +218,7 @@ type noButton struct {
 	image image.Image
 }
 
-func (b *noButton) Image(GraphicContext) image.Image {
+func (b *noButton) Image(GraphicContext, bool) image.Image {
 	return b.image
 }
 
@@ -232,6 +232,6 @@ type buttonContext struct {
 	deck  *HamDeck
 }
 
-func (c *buttonContext) Invalidate() {
-	c.deck.Redraw(c.index)
+func (c *buttonContext) Invalidate(redrawImages bool) {
+	c.deck.Redraw(c.index, redrawImages)
 }
