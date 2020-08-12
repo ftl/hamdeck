@@ -27,21 +27,21 @@ func NotifyReconnectListeners(listeners []interface{}) {
 	}
 }
 
-type ModeListener interface {
-	SetMode(mode client.Mode)
+type VFOListener interface {
+	SetVFO(vfo client.VFO)
 }
 
-type ModeListenerFunc func(client.Mode)
+type VFOListenerFunc func(client.VFO)
 
-func (f ModeListenerFunc) SetMode(mode client.Mode) {
-	f(mode)
+func (f VFOListenerFunc) SetVFO(vfo client.VFO) {
+	f(vfo)
 }
 
-func NotifyModeListeners(listeners []interface{}, mode client.Mode) {
+func NotifyVFOListeners(listeners []interface{}, vfo client.VFO) {
 	for _, listener := range listeners {
-		modeListener, ok := listener.(ModeListener)
+		vfoListener, ok := listener.(VFOListener)
 		if ok {
-			modeListener.SetMode(mode)
+			vfoListener.SetVFO(vfo)
 		}
 	}
 }
@@ -61,6 +61,25 @@ func NotifyFrequencyListeners(listeners []interface{}, frequency client.Frequenc
 		frequencyListener, ok := listener.(FrequencyListener)
 		if ok {
 			frequencyListener.SetFrequency(frequency)
+		}
+	}
+}
+
+type ModeListener interface {
+	SetMode(mode client.Mode)
+}
+
+type ModeListenerFunc func(client.Mode)
+
+func (f ModeListenerFunc) SetMode(mode client.Mode) {
+	f(mode)
+}
+
+func NotifyModeListeners(listeners []interface{}, mode client.Mode) {
+	for _, listener := range listeners {
+		modeListener, ok := listener.(ModeListener)
+		if ok {
+			modeListener.SetMode(mode)
 		}
 	}
 }
@@ -174,8 +193,9 @@ func (c *HamlibClient) connect(whenClosed func()) error {
 	hamdeck.NotifyEnablers(c.listeners, true)
 
 	c.Conn.StartPolling(c.pollingInterval, c.pollingTimeout,
-		client.PollCommand(client.OnModeAndPassband(c.setModeAndPassband)),
+		client.PollCommand(client.OnVFO(c.setVFO)),
 		client.PollCommand(client.OnFrequency(c.setFrequency)),
+		client.PollCommand(client.OnModeAndPassband(c.setModeAndPassband)),
 		client.PollCommand(client.OnPowerLevel(c.setPowerLevel)),
 		client.PollCommand(client.OnPTT(c.setPTT)),
 	)
@@ -206,12 +226,16 @@ func (c *HamlibClient) Connected() bool {
 	return c.connected
 }
 
-func (c *HamlibClient) setModeAndPassband(mode client.Mode, passband client.Frequency) {
-	NotifyModeListeners(c.listeners, mode)
+func (c *HamlibClient) setVFO(vfo client.VFO) {
+	NotifyVFOListeners(c.listeners, vfo)
 }
 
 func (c *HamlibClient) setFrequency(frequency client.Frequency) {
 	NotifyFrequencyListeners(c.listeners, frequency)
+}
+
+func (c *HamlibClient) setModeAndPassband(mode client.Mode, passband client.Frequency) {
+	NotifyModeListeners(c.listeners, mode)
 }
 
 func (c *HamlibClient) setPowerLevel(powerLevel float64) {
