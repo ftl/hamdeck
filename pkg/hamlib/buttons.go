@@ -18,7 +18,7 @@ import (
 func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, label string) *SetModeButton {
 	result := &SetModeButton{
 		client:  hamlibClient,
-		enabled: true,
+		enabled: hamlibClient.Connected(),
 		mode:    mode,
 		label:   label,
 	}
@@ -118,7 +118,7 @@ func (b *SetModeButton) Released() {
 func NewToggleModeButton(hamlibClient *HamlibClient, mode1 client.Mode, label1 string, mode2 client.Mode, label2 string) *ToggleModeButton {
 	result := &ToggleModeButton{
 		client:  hamlibClient,
-		enabled: true,
+		enabled: hamlibClient.Connected(),
 		modes:   []client.Mode{mode1, mode2},
 		labels:  []string{label1, label2},
 	}
@@ -239,7 +239,7 @@ func (b *ToggleModeButton) Released() {
 func NewSetButton(hamlibClient *HamlibClient, label string, command string, args ...string) *SetButton {
 	result := &SetButton{
 		client:  hamlibClient,
-		enabled: true,
+		enabled: hamlibClient.Connected(),
 		label:   label,
 		command: command,
 		args:    args,
@@ -308,7 +308,7 @@ func NewSwitchToBandButton(hamlibClient *HamlibClient, label string, bandName st
 	}
 	result := &SwitchToBandButton{
 		client:  hamlibClient,
-		enabled: true,
+		enabled: hamlibClient.Connected(),
 		label:   label,
 		band:    band,
 	}
@@ -408,7 +408,7 @@ func (b *SwitchToBandButton) Released() {
 func NewSetPowerLevelButton(hamlibClient *HamlibClient, label string, value float64) *SetPowerLevelButton {
 	result := &SetPowerLevelButton{
 		client:  hamlibClient,
-		enabled: true,
+		enabled: hamlibClient.Connected(),
 		label:   label,
 		value:   value,
 	}
@@ -508,7 +508,7 @@ func NewMOXButton(hamlibClient *HamlibClient, label string) *MOXButton {
 
 	result := &MOXButton{
 		client:  hamlibClient,
-		enabled: true,
+		enabled: hamlibClient.Connected(),
 		label:   label,
 	}
 
