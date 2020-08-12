@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"io"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -85,6 +86,7 @@ type ButtonFactory interface {
 
 type HamDeck struct {
 	device    Device
+	drawLock  *sync.Mutex
 	gc        GraphicContext
 	buttons   []Button
 	noButton  Button
@@ -95,9 +97,10 @@ type HamDeck struct {
 func New(device Device) *HamDeck {
 	buttonCount := device.Columns() * device.Rows()
 	result := &HamDeck{
-		device:  device,
-		gc:      NewGraphicContext(device.Pixels()),
-		buttons: make([]Button, buttonCount),
+		device:   device,
+		drawLock: new(sync.Mutex),
+		gc:       NewGraphicContext(device.Pixels()),
+		buttons:  make([]Button, buttonCount),
 	}
 	result.noButton = &noButton{image: result.gc.DrawNoButton()}
 	for i := range result.buttons {
@@ -115,6 +118,9 @@ func (d *HamDeck) RegisterFactory(factory ButtonFactory) {
 }
 
 func (d *HamDeck) RedrawAll(redrawImages bool) {
+	d.drawLock.Lock()
+	defer d.drawLock.Unlock()
+
 	for i, b := range d.buttons {
 		d.gc.Reset()
 		d.device.SetImage(i, b.Image(d.gc, redrawImages))
@@ -122,6 +128,9 @@ func (d *HamDeck) RedrawAll(redrawImages bool) {
 }
 
 func (d *HamDeck) Redraw(index int, redrawImages bool) {
+	d.drawLock.Lock()
+	defer d.drawLock.Unlock()
+
 	d.gc.Reset()
 	d.device.SetImage(index, d.buttons[index].Image(d.gc, redrawImages))
 }
