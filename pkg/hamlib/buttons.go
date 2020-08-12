@@ -23,6 +23,7 @@ func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, label string
 		bandplanMode: mode.ToBandplanMode(),
 		label:        label,
 	}
+	result.longpress = hamdeck.NewLongpressHandler(result.OnLongpress)
 
 	hamlibClient.Listen(result)
 
@@ -41,6 +42,8 @@ type SetModeButton struct {
 	mode               client.Mode
 	bandplanMode       bandplan.Mode
 	label              string
+	currentFrequency   client.Frequency
+	longpress          *hamdeck.LongpressHandler
 }
 
 func (b *SetModeButton) Enable(enabled bool) {
@@ -61,6 +64,7 @@ func (b *SetModeButton) SetMode(mode client.Mode) {
 }
 
 func (b *SetModeButton) SetFrequency(frequency client.Frequency) {
+	b.currentFrequency = frequency
 	wasInModePortion := b.inModePortion
 	b.inModePortion = isInModePortion(frequency, b.bandplanMode)
 	if b.inModePortion == wasInModePortion {
@@ -104,6 +108,7 @@ func (b *SetModeButton) redrawImages(gc hamdeck.GraphicContext) {
 }
 
 func (b *SetModeButton) Pressed() {
+	b.longpress.Pressed()
 	if !b.enabled {
 		return
 	}
@@ -115,17 +120,61 @@ func (b *SetModeButton) Pressed() {
 }
 
 func (b *SetModeButton) Released() {
-	// ignore
+	b.longpress.Released()
+}
+
+func (b *SetModeButton) OnLongpress() {
+	if !b.enabled {
+		return
+	}
+	frequency := findModePortionStart(b.currentFrequency, b.bandplanMode)
+	ctx := context.Background()
+	err := b.client.Conn.SetFrequency(ctx, frequency)
+	if err != nil {
+		log.Printf("cannot jump to the beginning of the %s band portion: %v", b.mode, err)
+	}
 }
 
 func isInModePortion(f client.Frequency, mode bandplan.Mode) bool {
+	currentPortion, ok := findPortion(f)
+	if !ok {
+		return false
+	}
+	return currentPortion.Mode == mode
+}
+
+func findModePortionStart(f client.Frequency, mode bandplan.Mode) client.Frequency {
+	band := bandplan.IARURegion1.ByFrequency(f)
+	var modePortion bandplan.Portion
+	var currentPortion bandplan.Portion
+	for _, portion := range band.Portions {
+		if (portion.Mode == mode && portion.From < f) || modePortion.Mode != mode {
+			modePortion = portion
+		}
+		if portion.Contains(f) {
+			currentPortion = portion
+		}
+		if modePortion.Mode == mode && currentPortion.Mode != "" {
+			break
+		}
+	}
+	if currentPortion.Mode == mode {
+		return currentPortion.From
+	}
+	if modePortion.Mode == mode {
+		return modePortion.From
+	}
+	return band.From
+}
+
+func findPortion(f client.Frequency) (bandplan.Portion, bool) {
 	band := bandplan.IARURegion1.ByFrequency(f)
 	for _, portion := range band.Portions {
 		if portion.Contains(f) {
-			return portion.Mode == mode
+			return portion, true
 		}
 	}
-	return false
+	return bandplan.Portion{}, false
 }
 
 /*
@@ -140,6 +189,7 @@ func NewToggleModeButton(hamlibClient *HamlibClient, mode1 client.Mode, label1 s
 		bandplanModes: []bandplan.Mode{mode1.ToBandplanMode(), mode2.ToBandplanMode()},
 		labels:        []string{label1, label2},
 	}
+	result.longpress = hamdeck.NewLongpressHandler(result.OnLongpress)
 
 	hamlibClient.Listen(result)
 
@@ -159,6 +209,8 @@ type ToggleModeButton struct {
 	bandplanModes      []bandplan.Mode
 	labels             []string
 	currentMode        int
+	currentFrequency   client.Frequency
+	longpress          *hamdeck.LongpressHandler
 }
 
 func (b *ToggleModeButton) Enable(enabled bool) {
@@ -188,6 +240,7 @@ func (b *ToggleModeButton) SetMode(mode client.Mode) {
 }
 
 func (b *ToggleModeButton) SetFrequency(frequency client.Frequency) {
+	b.currentFrequency = frequency
 	wasInModePortion := b.inModePortion
 	b.inModePortion = false
 	for _, mode := range b.bandplanModes {
@@ -238,6 +291,7 @@ func (b *ToggleModeButton) redrawImages(gc hamdeck.GraphicContext) {
 }
 
 func (b *ToggleModeButton) Pressed() {
+	b.longpress.Pressed()
 	if !b.enabled {
 		return
 	}
@@ -253,7 +307,19 @@ func (b *ToggleModeButton) Pressed() {
 }
 
 func (b *ToggleModeButton) Released() {
-	// ignore
+	b.longpress.Released()
+}
+
+func (b *ToggleModeButton) OnLongpress() {
+	if !b.enabled {
+		return
+	}
+	frequency := findModePortionStart(b.currentFrequency, b.bandplanModes[b.currentMode])
+	ctx := context.Background()
+	err := b.client.Conn.SetFrequency(ctx, frequency)
+	if err != nil {
+		log.Printf("cannot jump to the beginning of the %s band portion: %v", b.modes[b.currentMode], err)
+	}
 }
 
 /*

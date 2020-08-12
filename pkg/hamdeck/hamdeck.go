@@ -244,3 +244,27 @@ type buttonContext struct {
 func (c *buttonContext) Invalidate(redrawImages bool) {
 	c.deck.Redraw(c.index, redrawImages)
 }
+
+const LongpressDuration = 1 * time.Second
+
+func NewLongpressHandler(callback func()) *LongpressHandler {
+	return &LongpressHandler{
+		callback: callback,
+	}
+}
+
+type LongpressHandler struct {
+	callback func()
+	timer    *time.Timer
+}
+
+func (h *LongpressHandler) Pressed() {
+	h.timer = time.AfterFunc(LongpressDuration, h.callback)
+}
+
+func (h *LongpressHandler) Released() {
+	if h.timer == nil {
+		return
+	}
+	h.timer.Stop()
+}

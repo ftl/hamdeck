@@ -9,6 +9,7 @@ HamDeck allows you to control and automate your ham radio station using an Elgat
 * Set the output power level of your radio through hamlib.
 * Control the TX state (MOX) of your radio through hamlib.
 * Get an indication on the mode buttons which modes are suitable to the current frequency according to the IARU Region 1 bandplan.
+* Jump to the beginning of the closest band portion suitable for your currently selected mode (press the mode button > 1s).
 
 This tool is written in Go on Linux. It might also work on OSX or Windows, but I did not try that out.
 

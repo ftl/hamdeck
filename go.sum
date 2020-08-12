@@ -29,6 +29,8 @@ github.com/ftl/rigproxy v0.0.0-20200812094601-f0683a5b70c2 h1:hYcIN7TbVUg4UM8dE/
 github.com/ftl/rigproxy v0.0.0-20200812094601-f0683a5b70c2/go.mod h1:o1dorJdOg75DZWauLQMQod4Ntwhniiux6fPd/eRRmrk=
 github.com/ftl/rigproxy v0.0.0-20200812122214-55eacb57bbd9 h1:lYBBiMAR7K3k4+OvnUu2V60TChFNj2//JZDZWMvhdRQ=
 github.com/ftl/rigproxy v0.0.0-20200812122214-55eacb57bbd9/go.mod h1:o1dorJdOg75DZWauLQMQod4Ntwhniiux6fPd/eRRmrk=
+github.com/ftl/rigproxy v0.0.0-20200812132905-1b8d78e5c89e h1:iUR2RSSZ2huc/cOSYJqwdVqJAIbqu6Fy5KK/z0kFssk=
+github.com/ftl/rigproxy v0.0.0-20200812132905-1b8d78e5c89e/go.mod h1:o1dorJdOg75DZWauLQMQod4Ntwhniiux6fPd/eRRmrk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9GBnD5lWE=
