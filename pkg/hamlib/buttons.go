@@ -658,3 +658,84 @@ func (b *MOXButton) Pressed() {
 func (b *MOXButton) Released() {
 	// ignore
 }
+
+/*
+	SetVFOButton
+*/
+
+func NewSetVFOButton(hamlibClient *HamlibClient, label string, vfo client.VFO) *SetVFOButton {
+	result := &SetVFOButton{
+		client:  hamlibClient,
+		enabled: hamlibClient.Connected(),
+		label:   label,
+		vfo:     vfo,
+	}
+
+	hamlibClient.Listen(result)
+
+	return result
+}
+
+type SetVFOButton struct {
+	hamdeck.BaseButton
+	client        *HamlibClient
+	image         image.Image
+	selectedImage image.Image
+	enabled       bool
+	selected      bool
+	label         string
+	vfo           client.VFO
+}
+
+func (b *SetVFOButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.Invalidate(true)
+}
+
+func (b *SetVFOButton) SetVFO(vfo client.VFO) {
+	wasSelected := b.selected
+	b.selected = (vfo == b.vfo)
+	if b.selected == wasSelected {
+		return
+	}
+	b.Invalidate(false)
+}
+
+func (b *SetVFOButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.image == nil || b.selectedImage == nil || redrawImages {
+		b.redrawImages(gc)
+	}
+	if b.selected {
+		return b.selectedImage
+	}
+	return b.image
+}
+
+func (b *SetVFOButton) redrawImages(gc hamdeck.GraphicContext) {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	b.image = gc.DrawSingleLineTextButton(b.label)
+	gc.SwapColors()
+	b.selectedImage = gc.DrawSingleLineTextButton(b.label)
+}
+
+func (b *SetVFOButton) Pressed() {
+	if !b.enabled {
+		return
+	}
+	ctx := context.Background()
+	err := b.client.Conn.SetVFO(ctx, b.vfo)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func (b *SetVFOButton) Released() {
+	// ignore
+}

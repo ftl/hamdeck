@@ -90,6 +90,25 @@
 			"value": 1.0
 	    },
 		{
+			"type": "hamlib.SetVFO",
+			"index": 16,
+			"label": "VFO A",
+			"vfo": "VFOA"
+		},
+		{
+			"type": "hamlib.SetVFO",
+			"index": 17,
+			"label": "VFO B",
+			"vfo": "VFOB"
+		},
+		{
+			"type": "hamlib.Set",
+			"index": 18,
+			"label": "A=B",
+			"command": "vfo_op",
+			"args": ["CPY"]
+		},
+		{
 			"type": "pulse.ToggleMute",
 			"index": 24,
 			"sink": "my.sink",

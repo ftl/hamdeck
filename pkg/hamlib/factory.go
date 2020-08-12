@@ -19,6 +19,7 @@ const (
 	ConfigLabel2  = "label2"
 	ConfigBand    = "band"
 	ConfigValue   = "value"
+	ConfigVFO     = "vfo"
 )
 
 const (
@@ -28,6 +29,7 @@ const (
 	SwitchToBandButtonType  = "hamlib.SwitchToBand"
 	SetPowerLevelButtonType = "hamlib.SetPowerLevel"
 	MOXButtonType           = "hamlib.MOX"
+	SetVFOButtonType        = "hamlib.SetVFO"
 )
 
 func NewButtonFactory(address string) *Factory {
@@ -61,6 +63,8 @@ func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
 		return f.createSetPowerLevelButton(config)
 	case MOXButtonType:
 		return f.createMOXButton(config)
+	case SetVFOButtonType:
+		return f.createSetVFOButton(config)
 	default:
 		return nil
 	}
@@ -128,4 +132,15 @@ func (f *Factory) createMOXButton(config map[string]interface{}) hamdeck.Button 
 	label, _ := hamdeck.ToString(config[ConfigLabel])
 
 	return NewMOXButton(f.client, label)
+}
+
+func (f *Factory) createSetVFOButton(config map[string]interface{}) hamdeck.Button {
+	vfo, haveVFO := hamdeck.ToString(config[ConfigVFO])
+	label, haveLabel := hamdeck.ToString(config[ConfigLabel])
+	if !(haveVFO && haveLabel) {
+		log.Print("A hamlib.SetVFO button must have vfo and label fields.")
+		return nil
+	}
+
+	return NewSetVFOButton(f.client, label, client.VFO(vfo))
 }
