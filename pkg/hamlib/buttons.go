@@ -17,10 +17,11 @@ import (
 
 func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, label string) *SetModeButton {
 	result := &SetModeButton{
-		client:  hamlibClient,
-		enabled: hamlibClient.Connected(),
-		mode:    mode,
-		label:   label,
+		client:       hamlibClient,
+		enabled:      hamlibClient.Connected(),
+		mode:         mode,
+		bandplanMode: mode.ToBandplanMode(),
+		label:        label,
 	}
 
 	hamlibClient.Listen(result)
@@ -30,13 +31,16 @@ func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, label string
 
 type SetModeButton struct {
 	hamdeck.BaseButton
-	client        *HamlibClient
-	image         image.Image
-	selectedImage image.Image
-	enabled       bool
-	selected      bool
-	mode          client.Mode
-	label         string
+	client             *HamlibClient
+	image              image.Image
+	selectedImage      image.Image
+	inModePortionImage image.Image
+	enabled            bool
+	selected           bool
+	inModePortion      bool
+	mode               client.Mode
+	bandplanMode       bandplan.Mode
+	label              string
 }
 
 func (b *SetModeButton) Enable(enabled bool) {
@@ -56,12 +60,24 @@ func (b *SetModeButton) SetMode(mode client.Mode) {
 	b.Invalidate(false)
 }
 
+func (b *SetModeButton) SetFrequency(frequency client.Frequency) {
+	wasInModePortion := b.inModePortion
+	b.inModePortion = isInModePortion(frequency, b.bandplanMode)
+	if b.inModePortion == wasInModePortion {
+		return
+	}
+	b.Invalidate(false)
+}
+
 func (b *SetModeButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
-	if b.image == nil || b.selectedImage == nil || redrawImages {
+	if b.image == nil || b.selectedImage == nil || b.inModePortionImage == nil || redrawImages {
 		b.redrawImages(gc)
 	}
 	if b.selected {
 		return b.selectedImage
+	}
+	if b.inModePortion {
+		return b.inModePortionImage
 	}
 	return b.image
 }
@@ -76,9 +92,15 @@ func (b *SetModeButton) redrawImages(gc hamdeck.GraphicContext) {
 	if b.label != "" {
 		text = b.label
 	}
+
 	b.image = gc.DrawSingleLineTextButton(text)
+
 	gc.SwapColors()
 	b.selectedImage = gc.DrawSingleLineTextButton(text)
+
+	gc.SwapColors()
+	gc.SetBackground(hamdeck.Blue)
+	b.inModePortionImage = gc.DrawSingleLineTextButton(text)
 }
 
 func (b *SetModeButton) Pressed() {
@@ -96,16 +118,27 @@ func (b *SetModeButton) Released() {
 	// ignore
 }
 
+func isInModePortion(f client.Frequency, mode bandplan.Mode) bool {
+	band := bandplan.IARURegion1.ByFrequency(f)
+	for _, portion := range band.Portions {
+		if portion.Contains(f) {
+			return portion.Mode == mode
+		}
+	}
+	return false
+}
+
 /*
 	ToggleModeButton
 */
 
 func NewToggleModeButton(hamlibClient *HamlibClient, mode1 client.Mode, label1 string, mode2 client.Mode, label2 string) *ToggleModeButton {
 	result := &ToggleModeButton{
-		client:  hamlibClient,
-		enabled: hamlibClient.Connected(),
-		modes:   []client.Mode{mode1, mode2},
-		labels:  []string{label1, label2},
+		client:        hamlibClient,
+		enabled:       hamlibClient.Connected(),
+		modes:         []client.Mode{mode1, mode2},
+		bandplanModes: []bandplan.Mode{mode1.ToBandplanMode(), mode2.ToBandplanMode()},
+		labels:        []string{label1, label2},
 	}
 
 	hamlibClient.Listen(result)
@@ -115,14 +148,17 @@ func NewToggleModeButton(hamlibClient *HamlibClient, mode1 client.Mode, label1 s
 
 type ToggleModeButton struct {
 	hamdeck.BaseButton
-	client        *HamlibClient
-	image         image.Image
-	selectedImage image.Image
-	enabled       bool
-	selected      bool
-	modes         []client.Mode
-	labels        []string
-	currentMode   int
+	client             *HamlibClient
+	image              image.Image
+	selectedImage      image.Image
+	inModePortionImage image.Image
+	enabled            bool
+	selected           bool
+	inModePortion      bool
+	modes              []client.Mode
+	bandplanModes      []bandplan.Mode
+	labels             []string
+	currentMode        int
 }
 
 func (b *ToggleModeButton) Enable(enabled bool) {
@@ -151,12 +187,29 @@ func (b *ToggleModeButton) SetMode(mode client.Mode) {
 	b.Invalidate(true)
 }
 
+func (b *ToggleModeButton) SetFrequency(frequency client.Frequency) {
+	wasInModePortion := b.inModePortion
+	b.inModePortion = false
+	for _, mode := range b.bandplanModes {
+		if isInModePortion(frequency, mode) {
+			b.inModePortion = true
+		}
+	}
+	if b.inModePortion == wasInModePortion {
+		return
+	}
+	b.Invalidate(false)
+}
+
 func (b *ToggleModeButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
-	if b.image == nil || b.selectedImage == nil || redrawImages {
+	if b.image == nil || b.selectedImage == nil || b.inModePortionImage == nil || redrawImages {
 		b.redrawImages(gc)
 	}
 	if b.selected {
 		return b.selectedImage
+	}
+	if b.inModePortion {
+		return b.inModePortionImage
 	}
 	return b.image
 }
@@ -175,8 +228,13 @@ func (b *ToggleModeButton) redrawImages(gc hamdeck.GraphicContext) {
 		}
 	}
 	b.image = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
+
 	gc.SwapColors()
 	b.selectedImage = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
+
+	gc.SwapColors()
+	gc.SetBackground(hamdeck.Blue)
+	b.inModePortionImage = gc.DrawDoubleLineToggleTextButton(text[0], text[1], b.currentMode+1)
 }
 
 func (b *ToggleModeButton) Pressed() {
