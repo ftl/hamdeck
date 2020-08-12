@@ -10,12 +10,10 @@ go 1.14
 require (
 	github.com/fogleman/gg v1.3.0
 	github.com/ftl/hamradio v0.0.0-20200721200456-334cc249f095
-	github.com/ftl/rigproxy v0.0.0-20200804102549-1bf4b5d03455
+	github.com/ftl/rigproxy v0.0.0-20200812094601-f0683a5b70c2
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/jfreymuth/pulse v0.0.0-20200804114219-7d61c4938214
 	github.com/muesli/streamdeck v0.0.0-20200514174954-dd59ecb861aa
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/cobra v1.0.0
-	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/image v0.0.0-20200801110659-972c09e46d76 // indirect
 )
