@@ -23,7 +23,6 @@ func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, label string
 		label:   label,
 	}
 
-	result.updateSelection()
 	hamlibClient.Listen(result)
 
 	return result
@@ -48,20 +47,6 @@ func (b *SetModeButton) Enable(enabled bool) {
 	b.image = nil
 	b.selectedImage = nil
 	b.Invalidate()
-}
-
-func (b *SetModeButton) updateSelection() {
-	if !b.client.Connected() {
-		b.Enable(false)
-		return
-	}
-
-	mode, _, err := b.client.Conn.ModeAndPassband(context.Background())
-	if err != nil {
-		log.Printf("cannot retrieve current mode: %v", err)
-		return
-	}
-	b.SetMode(mode)
 }
 
 func (b *SetModeButton) SetMode(mode client.Mode) {
@@ -123,7 +108,6 @@ func NewToggleModeButton(hamlibClient *HamlibClient, mode1 client.Mode, label1 s
 		labels:  []string{label1, label2},
 	}
 
-	result.updateSelection()
 	hamlibClient.Listen(result)
 
 	return result
@@ -149,20 +133,6 @@ func (b *ToggleModeButton) Enable(enabled bool) {
 	b.image = nil
 	b.selectedImage = nil
 	b.Invalidate()
-}
-
-func (b *ToggleModeButton) updateSelection() {
-	if !b.client.Connected() {
-		b.Enable(false)
-		return
-	}
-
-	mode, _, err := b.client.Conn.ModeAndPassband(context.Background())
-	if err != nil {
-		log.Printf("cannot retrieve current mode: %v", err)
-		return
-	}
-	b.SetMode(mode)
 }
 
 func (b *ToggleModeButton) SetMode(mode client.Mode) {
@@ -313,7 +283,6 @@ func NewSwitchToBandButton(hamlibClient *HamlibClient, label string, bandName st
 		band:    band,
 	}
 
-	result.updateSelection()
 	hamlibClient.Listen(result)
 
 	return result
@@ -338,20 +307,6 @@ func (b *SwitchToBandButton) Enable(enabled bool) {
 	b.image = nil
 	b.selectedImage = nil
 	b.Invalidate()
-}
-
-func (b *SwitchToBandButton) updateSelection() {
-	if !b.client.Connected() {
-		b.Enable(false)
-		return
-	}
-
-	frequency, err := b.client.Conn.Frequency(context.Background())
-	if err != nil {
-		log.Printf("cannot retrieve current frequency: %v", err)
-		return
-	}
-	b.SetFrequency(frequency)
 }
 
 func (b *SwitchToBandButton) SetFrequency(frequency client.Frequency) {
@@ -413,7 +368,6 @@ func NewSetPowerLevelButton(hamlibClient *HamlibClient, label string, value floa
 		value:   value,
 	}
 
-	result.updateSelection()
 	hamlibClient.Listen(result)
 
 	return result
@@ -438,20 +392,6 @@ func (b *SetPowerLevelButton) Enable(enabled bool) {
 	b.image = nil
 	b.selectedImage = nil
 	b.Invalidate()
-}
-
-func (b *SetPowerLevelButton) updateSelection() {
-	if !b.client.Connected() {
-		b.Enable(false)
-		return
-	}
-
-	powerLevel, err := b.client.Conn.PowerLevel(context.Background())
-	if err != nil {
-		log.Printf("cannot retrieve current power level: %v", err)
-		return
-	}
-	b.SetPowerLevel(powerLevel)
 }
 
 func (b *SetPowerLevelButton) SetPowerLevel(powerLevel float64) {
@@ -512,7 +452,6 @@ func NewMOXButton(hamlibClient *HamlibClient, label string) *MOXButton {
 		label:   label,
 	}
 
-	result.updateSelection()
 	hamlibClient.Listen(result)
 
 	return result
@@ -538,20 +477,6 @@ func (b *MOXButton) Enable(enabled bool) {
 	b.image = nil
 	b.selectedImage = nil
 	b.Invalidate()
-}
-
-func (b *MOXButton) updateSelection() {
-	if !b.client.Connected() {
-		b.Enable(false)
-		return
-	}
-
-	ptt, err := b.client.Conn.PTT(context.Background())
-	if err != nil {
-		log.Printf("cannot retrieve current PTT state: %v", err)
-		return
-	}
-	b.SetPTT(ptt)
 }
 
 func (b *MOXButton) Flash(flashOn bool) {
