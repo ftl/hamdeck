@@ -28,6 +28,12 @@ To build the `hamdeck` binary simply run
 go build
 ```
 
+## Configuration
+
+HamDeck reads a JSON file on startup that must contain the definitions of all buttons. By default it uses the file `~/.config/hamradio/hamdeck.json`. The configuration file is not created automatically, you must create your configuration file manually. See [example_conf.json](./example_conf.json) for an example of a configuration file.
+
+With the commandline parameter `--config=<config_filename.json>` you can define an alternative configuration file. This is handy if you want to have several different setups of your Stream Deck (e.g. one for rag chewing and one for contest operation).
+
 ## Install
 
 The following describes the steps how to install `hamdeck` on an Ubuntu 20.04 LTS (Focal Fossa) to start automatically when you plug-in your the Stream Deck device.

@@ -6,6 +6,7 @@ import (
 	"log/syslog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/ftl/hamradio/cfg"
@@ -41,7 +42,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.syslog, "syslog", false, "use syslog for logging")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.serial, "serial", "", "the serial number of the Stream Deck device that should be used")
 	rootCmd.PersistentFlags().IntVar(&rootFlags.brightness, "brightness", 100, "the initial brightness of the Stream Deck device")
-	rootCmd.PersistentFlags().StringVar(&rootFlags.configFile, "config", "", "the configuration file that should be used (default: .config/hamradio/conf.json)")
+	rootCmd.PersistentFlags().StringVar(&rootFlags.configFile, "config", "", "the configuration file that should be used (default: .config/hamradio/hamdeck.json)")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.hamlibAddress, "hamlib", "", "the address of the rigctld server (default: localhost:4532)")
 }
 
@@ -109,7 +110,12 @@ func monitorShutdownSignals() <-chan struct{} {
 
 func configureHamDeck(deck *hamdeck.HamDeck, config string) error {
 	if config == "" {
-		return useDefaultConfiguration(deck)
+		configDirectory, err := cfg.Directory("")
+		if err != nil {
+			return fmt.Errorf("cannot resolve configuration directory: %w", err)
+		}
+		config = filepath.Join(configDirectory, hamdeck.ConfigDefaultFilename)
+		log.Printf("Using default configuration file %s", config)
 	}
 
 	file, err := os.Open(config)
@@ -119,19 +125,4 @@ func configureHamDeck(deck *hamdeck.HamDeck, config string) error {
 	defer file.Close()
 
 	return deck.ReadConfig(file)
-}
-
-func useDefaultConfiguration(deck *hamdeck.HamDeck) error {
-	hamradioConfig, err := cfg.LoadDefault()
-	if err != nil {
-		return fmt.Errorf("cannot open default configuration: %w", err)
-	}
-
-	rawConfig := hamradioConfig.Get(hamdeck.ConfigMainKey, nil)
-	config, ok := rawConfig.(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("cannot find hamdeck configuration in default configuration file")
-	}
-
-	return deck.AttachConfiguredButtons(config)
 }

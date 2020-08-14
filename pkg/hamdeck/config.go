@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	ConfigMainKey = "hamdeck"
-	ConfigButtons = "buttons"
-	ConfigType    = "type"
-	ConfigIndex   = "index"
+	ConfigDefaultFilename = "hamdeck.json"
+	ConfigMainKey         = "hamdeck"
+	ConfigButtons         = "buttons"
+	ConfigType            = "type"
+	ConfigIndex           = "index"
 )
 
 func (d *HamDeck) ReadConfig(r io.Reader) error {
@@ -34,7 +35,16 @@ func (d *HamDeck) ReadConfig(r io.Reader) error {
 		return fmt.Errorf("configuration is of wrong type: %T", rawData)
 	}
 
-	return d.AttachConfiguredButtons(configuration)
+	rawSubconfiguration, ok := configuration[ConfigMainKey]
+	if !ok {
+		return d.AttachConfiguredButtons(configuration)
+	}
+
+	subconfiguration, ok := rawSubconfiguration.(map[string]interface{})
+	if !ok {
+		return d.AttachConfiguredButtons(configuration)
+	}
+	return d.AttachConfiguredButtons(subconfiguration)
 }
 
 func (d *HamDeck) AttachConfiguredButtons(configuration map[string]interface{}) error {
