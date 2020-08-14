@@ -1,7 +1,6 @@
 package hamlib
 
 import (
-	"context"
 	"image"
 	"log"
 
@@ -112,7 +111,7 @@ func (b *SetModeButton) Pressed() {
 	if !b.enabled {
 		return
 	}
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetModeAndPassband(ctx, b.mode, 0)
 	if err != nil {
 		log.Printf("cannot set mode: %v", err)
@@ -128,7 +127,7 @@ func (b *SetModeButton) OnLongpress() {
 		return
 	}
 	frequency := findModePortionStart(b.currentFrequency, b.bandplanMode)
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetFrequency(ctx, frequency)
 	if err != nil {
 		log.Printf("cannot jump to the beginning of the %s band portion: %v", b.mode, err)
@@ -299,7 +298,7 @@ func (b *ToggleModeButton) Pressed() {
 	if b.selected {
 		mode = (mode + 1) % len(b.modes)
 	}
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetModeAndPassband(ctx, b.modes[mode], 0)
 	if err != nil {
 		log.Printf("cannot set mode: %v", err)
@@ -315,7 +314,7 @@ func (b *ToggleModeButton) OnLongpress() {
 		return
 	}
 	frequency := findModePortionStart(b.currentFrequency, b.bandplanModes[b.currentMode])
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetFrequency(ctx, frequency)
 	if err != nil {
 		log.Printf("cannot jump to the beginning of the %s band portion: %v", b.modes[b.currentMode], err)
@@ -374,7 +373,7 @@ func (b *SetButton) Pressed() {
 	if !b.enabled {
 		return
 	}
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.Set(ctx, b.command, b.args...)
 	if err != nil {
 		log.Printf("cannot execute %s: %v", b.command, err)
@@ -464,7 +463,7 @@ func (b *SwitchToBandButton) Pressed() {
 	if !b.enabled {
 		return
 	}
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SwitchToBand(ctx, b.band)
 	if err != nil {
 		log.Print(err)
@@ -545,7 +544,7 @@ func (b *SetPowerLevelButton) Pressed() {
 	if !b.enabled {
 		return
 	}
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetPowerLevel(ctx, b.value)
 	if err != nil {
 		log.Print(err)
@@ -648,7 +647,7 @@ func (b *MOXButton) Pressed() {
 	if b.selected {
 		value = client.PTTRx
 	}
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetPTT(ctx, value)
 	if err != nil {
 		log.Print(err)
@@ -729,7 +728,7 @@ func (b *SetVFOButton) Pressed() {
 	if !b.enabled {
 		return
 	}
-	ctx := context.Background()
+	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetVFO(ctx, b.vfo)
 	if err != nil {
 		log.Print(err)

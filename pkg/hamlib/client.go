@@ -1,6 +1,7 @@
 package hamlib
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -128,6 +129,7 @@ func NewClient(address string) *HamlibClient {
 		pollingInterval: 500 * time.Millisecond,
 		pollingTimeout:  2 * time.Second,
 		retryInterval:   5 * time.Second,
+		requestTimeout:  500 * time.Millisecond,
 		done:            make(chan struct{}),
 	}
 }
@@ -139,6 +141,7 @@ type HamlibClient struct {
 	pollingInterval time.Duration
 	pollingTimeout  time.Duration
 	retryInterval   time.Duration
+	requestTimeout  time.Duration
 	connected       bool
 	closed          chan struct{}
 	done            chan struct{}
@@ -220,6 +223,11 @@ func (c *HamlibClient) Close() {
 		c.Conn.Close()
 		<-c.closed
 	}
+}
+
+func (c *HamlibClient) WithRequestTimeout() context.Context {
+	ctx, _ := context.WithTimeout(context.Background(), c.requestTimeout)
+	return ctx
 }
 
 func (c *HamlibClient) Connected() bool {
