@@ -138,7 +138,7 @@ func (c *PulseClient) connect(whenClosed func()) error {
 		return fmt.Errorf("cannot set the client properties: %w", err)
 	}
 
-	var mask uint32 = paSubscriptionMaskSink | paSubscriptionMaskSource
+	var mask uint32 = paSubscriptionMaskSink | paSubscriptionMaskSource | paSubscriptionMaskSinkInput | paSubscriptionMaskSourceOutput
 	err = c.client.Request(&proto.Subscribe{Mask: mask}, nil)
 	if err != nil {
 		c.conn.Close()
@@ -182,6 +182,10 @@ func (c *PulseClient) Connected() bool {
 	return c.connected
 }
 
+/*
+	Subscibe Events
+*/
+
 func (c *PulseClient) Listen(listener interface{}) {
 	c.listeners = append(c.listeners, listener)
 }
@@ -201,6 +205,10 @@ func (c *PulseClient) handleSubscribeEvents() {
 			c.handleSinkChange(index)
 		case paSubscriptionEventSource:
 			c.handleSourceChange(index)
+		case paSubscriptionEventSinkInput:
+			c.handleSinkInputChange(index)
+		case paSubscriptionEventSourceOutput:
+			c.handleSourceOutputChange(index)
 		default:
 			log.Printf("unknown event facility: %d", facility)
 		}
@@ -235,6 +243,34 @@ func (c *PulseClient) handleSourceChange(index int) {
 	c.notifyMuteListeners(infoReply.SourceName, infoReply.Mute)
 }
 
+func (c *PulseClient) handleSinkInputChange(index int) {
+	infoRequest := proto.GetSinkInputInfo{
+		SinkInputIndex: uint32(index),
+	}
+	infoReply := proto.GetSinkInputInfoReply{}
+	err := c.client.Request(&infoRequest, &infoReply)
+	if err != nil {
+		log.Printf("cannot get sink input info: %v", err)
+		return
+	}
+
+	c.notifyMuteListeners(infoReply.MediaName, infoReply.Muted)
+}
+
+func (c *PulseClient) handleSourceOutputChange(index int) {
+	infoRequest := proto.GetSourceOutputInfo{
+		SourceOutpuIndex: uint32(index),
+	}
+	infoReply := proto.GetSourceOutputInfoReply{}
+	err := c.client.Request(&infoRequest, &infoReply)
+	if err != nil {
+		log.Printf("cannot get source output info: %v", err)
+		return
+	}
+
+	c.notifyMuteListeners(infoReply.MediaName, infoReply.Muted)
+}
+
 func (c *PulseClient) notifyMuteListeners(id string, mute bool) {
 	for _, listener := range c.listeners {
 		muteListener, ok := listener.(MuteListener)
@@ -243,6 +279,10 @@ func (c *PulseClient) notifyMuteListeners(id string, mute bool) {
 		}
 	}
 }
+
+/*
+	Sink
+*/
 
 func (c *PulseClient) ToggleMuteSink(id string) (bool, error) {
 	infoRequest := proto.GetSinkInfo{
@@ -269,6 +309,25 @@ func (c *PulseClient) ToggleMuteSink(id string) (bool, error) {
 	return !infoReply.Mute, nil
 }
 
+func (c *PulseClient) IsSinkMuted(id string) (bool, error) {
+	infoRequest := proto.GetSinkInfo{
+		SinkIndex: proto.Undefined,
+		SinkName:  id,
+	}
+	infoReply := proto.GetSinkInfoReply{}
+
+	err := c.client.Request(&infoRequest, &infoReply)
+	if err != nil {
+		return false, fmt.Errorf("cannot get sink info: %w", err)
+	}
+
+	return infoReply.Mute, nil
+}
+
+/*
+	Source
+*/
+
 func (c *PulseClient) ToggleMuteSource(id string) (bool, error) {
 	infoRequest := proto.GetSourceInfo{
 		SourceIndex: proto.Undefined,
@@ -294,21 +353,6 @@ func (c *PulseClient) ToggleMuteSource(id string) (bool, error) {
 	return !infoReply.Mute, nil
 }
 
-func (c *PulseClient) IsSinkMuted(id string) (bool, error) {
-	infoRequest := proto.GetSinkInfo{
-		SinkIndex: proto.Undefined,
-		SinkName:  id,
-	}
-	infoReply := proto.GetSinkInfoReply{}
-
-	err := c.client.Request(&infoRequest, &infoReply)
-	if err != nil {
-		return false, fmt.Errorf("cannot get sink info: %w", err)
-	}
-
-	return infoReply.Mute, nil
-}
-
 func (c *PulseClient) IsSourceMuted(id string) (bool, error) {
 	infoRequest := proto.GetSourceInfo{
 		SourceIndex: proto.Undefined,
@@ -322,4 +366,102 @@ func (c *PulseClient) IsSourceMuted(id string) (bool, error) {
 	}
 
 	return infoReply.Mute, nil
+}
+
+/*
+	Sink Input
+*/
+
+func (c *PulseClient) ToggleMuteSinkInput(mediaName string) (bool, error) {
+	sinkInput, err := c.findSinkInput(mediaName)
+	if err != nil {
+		return false, fmt.Errorf("cannot get sink input info: %w", err)
+	}
+
+	muteRequest := proto.SetSinkInputMute{
+		SinkInputIndex: sinkInput.SinkInputIndex,
+		Mute:           !sinkInput.Muted,
+	}
+	err = c.client.Request(&muteRequest, nil)
+	if err != nil {
+		return false, fmt.Errorf("cannot mute sink input: %w", err)
+	}
+
+	return !sinkInput.Muted, nil
+}
+
+func (c *PulseClient) IsSinkInputMuted(mediaName string) (bool, error) {
+	sinkInput, err := c.findSinkInput(mediaName)
+	if err != nil {
+		return false, fmt.Errorf("cannot get sink input info: %w", err)
+	}
+
+	return sinkInput.Muted, nil
+}
+
+func (c *PulseClient) findSinkInput(mediaName string) (*proto.GetSinkInputInfoReply, error) {
+	listRequest := proto.GetSinkInputInfoList{}
+	listReply := proto.GetSinkInputInfoListReply{}
+
+	err := c.client.Request(&listRequest, &listReply)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get sink input list: %w", err)
+	}
+
+	for _, reply := range listReply {
+		if reply.MediaName == mediaName {
+			return reply, nil
+		}
+	}
+
+	return nil, fmt.Errorf("sink input %s not found", mediaName)
+}
+
+/*
+	Source Output
+*/
+
+func (c *PulseClient) ToggleMuteSourceOutput(mediaName string) (bool, error) {
+	sourceOutput, err := c.findSourceOutput(mediaName)
+	if err != nil {
+		return false, fmt.Errorf("cannot get source output info: %w", err)
+	}
+
+	muteRequest := proto.SetSourceOutputMute{
+		SourceOutputIndex: sourceOutput.SourceOutpuIndex,
+		Mute:              !sourceOutput.Muted,
+	}
+	err = c.client.Request(&muteRequest, nil)
+	if err != nil {
+		return false, fmt.Errorf("cannot mute source output: %w", err)
+	}
+
+	return !sourceOutput.Muted, nil
+}
+
+func (c *PulseClient) IsSourceOutputMuted(mediaName string) (bool, error) {
+	sourceOutput, err := c.findSourceOutput(mediaName)
+	if err != nil {
+		return false, fmt.Errorf("cannot get source output info: %w", err)
+	}
+
+	return sourceOutput.Muted, nil
+}
+
+func (c *PulseClient) findSourceOutput(mediaName string) (*proto.GetSourceOutputInfoReply, error) {
+	listRequest := proto.GetSourceOutputInfoList{}
+	listReply := proto.GetSourceOutputInfoListReply{}
+
+	err := c.client.Request(&listRequest, &listReply)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get source output list: %w", err)
+	}
+
+	for _, reply := range listReply {
+		if reply.MediaName == mediaName {
+			return reply, nil
+		}
+	}
+
+	return nil, fmt.Errorf("source output %s not found", mediaName)
 }

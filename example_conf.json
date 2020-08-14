@@ -121,6 +121,18 @@
 			"label": "Source"
 		},
 		{
+			"type": "pulse.ToggleMute",
+			"index": 26,
+			"sinkInput": "Sink Input Media Name",
+			"label": "Source"
+		},
+		{
+			"type": "pulse.ToggleMute",
+			"index": 27,
+			"sourceOutput": "Source Output Media Name",
+			"label": "Source"
+		},
+		{
 			"type": "hamlib.MOX",
 			"index": 31
 		}

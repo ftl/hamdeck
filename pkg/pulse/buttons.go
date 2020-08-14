@@ -7,13 +7,15 @@ import (
 	"github.com/ftl/hamdeck/pkg/hamdeck"
 )
 
-func NewToggleMuteButton(client *PulseClient, sinkID, sourceID string, label string) *ToggleMuteButton {
+func NewToggleMuteButton(client *PulseClient, sinkID, sourceID, sinkInputName, sourceOutputName string, label string) *ToggleMuteButton {
 	result := &ToggleMuteButton{
-		client:   client,
-		sinkID:   sinkID,
-		sourceID: sourceID,
-		label:    label,
-		enabled:  client.Connected(),
+		client:           client,
+		sinkID:           sinkID,
+		sourceID:         sourceID,
+		sinkInputName:    sinkInputName,
+		sourceOutputName: sourceOutputName,
+		label:            label,
+		enabled:          client.Connected(),
 	}
 
 	result.updateSelection()
@@ -24,14 +26,16 @@ func NewToggleMuteButton(client *PulseClient, sinkID, sourceID string, label str
 
 type ToggleMuteButton struct {
 	hamdeck.BaseButton
-	client       *PulseClient
-	sinkID       string
-	sourceID     string
-	label        string
-	enabled      bool
-	muted        bool
-	mutedImage   image.Image
-	unmutedImage image.Image
+	client           *PulseClient
+	sinkID           string
+	sourceID         string
+	sinkInputName    string
+	sourceOutputName string
+	label            string
+	enabled          bool
+	muted            bool
+	mutedImage       image.Image
+	unmutedImage     image.Image
 }
 
 func (b *ToggleMuteButton) Enable(enabled bool) {
@@ -57,6 +61,10 @@ func (b *ToggleMuteButton) updateSelection() {
 	} else if b.sourceID != "" {
 		id = b.sourceID
 		muted, err = b.client.IsSourceMuted(b.sourceID)
+	} else if b.sinkInputName != "" {
+		muted, err = b.client.IsSinkInputMuted(b.sinkInputName)
+	} else if b.sourceOutputName != "" {
+		muted, err = b.client.IsSourceOutputMuted(b.sourceOutputName)
 	}
 	if err != nil {
 		log.Print(err)
@@ -67,7 +75,7 @@ func (b *ToggleMuteButton) updateSelection() {
 }
 
 func (b *ToggleMuteButton) SetMute(id string, mute bool) {
-	if id == b.sinkID || id == b.sourceID {
+	if id == b.sinkID || id == b.sourceID || id == b.sinkInputName || id == b.sourceOutputName {
 		b.muted = mute
 		b.Invalidate(false)
 	}
@@ -104,6 +112,10 @@ func (b *ToggleMuteButton) Pressed() {
 		_, err = b.client.ToggleMuteSink(b.sinkID)
 	} else if b.sourceID != "" {
 		_, err = b.client.ToggleMuteSource(b.sourceID)
+	} else if b.sinkInputName != "" {
+		_, err = b.client.ToggleMuteSinkInput(b.sinkInputName)
+	} else if b.sourceOutputName != "" {
+		_, err = b.client.ToggleMuteSourceOutput(b.sourceOutputName)
 	}
 	if err != nil {
 		log.Printf("cannot toggle mute state: %v", err)

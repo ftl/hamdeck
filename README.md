@@ -2,7 +2,7 @@
 
 HamDeck allows you to control and automate your ham radio station using an Elgato Stream Deck device. You can define buttons using a JSON configuration file. HamDeck connects to the local pulseaudio server and the local rigctld server on the default ports. Currently the following actions are implemented as Stream Deck buttons:
 
-* Toggle the mute state of a pulseaudio sink our source.
+* Toggle the mute state of a pulseaudio sink, source, sink input, or source output.
 * Call any simple hamlib set command (e.g. `vfo_op BAND_UP`).
 * Set the mode of your radio through hamlib.
 * Switch to a specific frequency band through hamlib (if `vfo_op BAND_UP/BAND_DOWN` is supported by your radio).
