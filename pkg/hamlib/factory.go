@@ -9,17 +9,18 @@ import (
 )
 
 const (
-	ConfigCommand = "command"
-	ConfigArgs    = "args"
-	ConfigMode    = "mode"
-	ConfigLabel   = "label"
-	ConfigMode1   = "mode1"
-	ConfigLabel1  = "label1"
-	ConfigMode2   = "mode2"
-	ConfigLabel2  = "label2"
-	ConfigBand    = "band"
-	ConfigValue   = "value"
-	ConfigVFO     = "vfo"
+	ConfigCommand   = "command"
+	ConfigArgs      = "args"
+	ConfigMode      = "mode"
+	ConfigLabel     = "label"
+	ConfigMode1     = "mode1"
+	ConfigLabel1    = "label1"
+	ConfigMode2     = "mode2"
+	ConfigLabel2    = "label2"
+	ConfigBand      = "band"
+	ConfigValue     = "value"
+	ConfigVFO       = "vfo"
+	ConfigUseUpDown = "use_up_down"
 )
 
 const (
@@ -109,12 +110,13 @@ func (f *Factory) createSetButton(config map[string]interface{}) hamdeck.Button 
 func (f *Factory) createSwitchToBandButton(config map[string]interface{}) hamdeck.Button {
 	band, haveBand := hamdeck.ToString(config[ConfigBand])
 	label, _ := hamdeck.ToString(config[ConfigLabel])
+	useUpDown, _ := hamdeck.ToBool(config[ConfigUseUpDown])
 	if !(haveBand) {
 		log.Print("A hamlib.SwitchToBand button must have a band field.")
 		return nil
 	}
 
-	return NewSwitchToBandButton(f.client, label, band)
+	return NewSwitchToBandButton(f.client, label, band, useUpDown)
 }
 
 func (f *Factory) createSetPowerLevelButton(config map[string]interface{}) hamdeck.Button {

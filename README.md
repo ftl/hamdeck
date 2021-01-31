@@ -1,16 +1,17 @@
 # HamDeck
 
-HamDeck allows you to control and automate your ham radio station using an Elgato Stream Deck device. You can define buttons using a JSON configuration file. HamDeck connects to the local pulseaudio server and the local rigctld server on the default ports. Currently the following actions are implemented as Stream Deck buttons:
+HamDeck allows you to control and automate your ham radio station using an Elgato Stream Deck device. You can define buttons using a JSON configuration file. HamDeck connects to the local pulseaudio server, to a Hamlib rigctld server, or to ExpertSDR through the TCI protocol. Currently the following actions are implemented as Stream Deck buttons:
 
 * Toggle the mute state of a pulseaudio sink, source, sink input, or source output.
-* Call any simple hamlib set command (e.g. `vfo_op BAND_UP`).
-* Set the mode of your radio through hamlib.
-* Switch to a specific frequency band through hamlib (if `vfo_op BAND_UP/BAND_DOWN` is supported by your radio).
-* Set the output power level of your radio through hamlib.
-* Control the TX state (MOX) of your radio through hamlib.
-* Select the VFO of your radio through hamlib.
+* Call any simple Hamlib set command (e.g. `vfo_op BAND_UP`).
+* Set the mode of your radio through Hamlib or TCI.
+* Switch to a specific frequency band through Hamlib or TCI.
+* Set the output power level of your radio through Hamlib or TCI.
+* Control the TX state (MOX) of your radio through Hamlib or TCI.
+* Select the VFO of your radio through Hamlib.
 * Get an indication on the mode buttons which modes are suitable to the current frequency according to the IARU Region 1 bandplan.
-* Jump to the beginning of the closest band portion suitable for your currently selected mode (press the mode button > 1s).
+* Jump to the center of the closest band portion suitable for your currently selected mode (press the mode button > 1s).
+* Control the major volume of ExpertSDR through TCI.
 
 This tool is written in Go on Linux. It might also work on OSX or Windows, but I did not try that out.
 
@@ -32,7 +33,14 @@ go build
 
 HamDeck reads a JSON file on startup that must contain the definitions of all buttons. By default it uses the file `~/.config/hamradio/hamdeck.json`. The configuration file is not created automatically, you must create your configuration file manually. See [example_conf.json](./example_conf.json) for an example of a configuration file.
 
-With the commandline parameter `--config=<config_filename.json>` you can define an alternative configuration file. This is handy if you want to have several different setups of your Stream Deck (e.g. one for rag chewing and one for contest operation).
+With the command line parameter `--config=<config_filename.json>` you can define an alternative configuration file. This is handy if you want to have several different setups of your Stream Deck (e.g. one for rag chewing and one for contest operation).
+
+The buttons for Hamlib and TCI are only available if you provide a corresponding host address (and port if it deviates from the standard):
+
+* Use the `--hamilb` command line parameter to connect to a Hamlib rigctld server (e.g. `--hamlib=localhost:4532`).
+* Use the `--tci` command line parameter to connect to a ExpertSDR instance through the TCI protocol (e.g. `--hamlib=localhost:40001`).
+
+You can have both connections open at the same time.
 
 ## Install
 
@@ -79,10 +87,6 @@ BindsTo=dev-streamdeck.device
 ExecStart=<hamdeck binary, see above> --syslog --config=<your config file>
 User=<your username>
 ```
-
-## Disclaimer
-
-I develop this tools for myself and just for fun in my free time. If you find it useful, I'm happy to hear about that. If you have trouble using it, you have all the source code to fix the problem yourself (although pull requests are welcome).
 
 ## Links
 

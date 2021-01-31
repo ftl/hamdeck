@@ -16,6 +16,7 @@ import (
 	"github.com/ftl/hamdeck/pkg/hamlib"
 	"github.com/ftl/hamdeck/pkg/pulse"
 	"github.com/ftl/hamdeck/pkg/streamdeck"
+	"github.com/ftl/hamdeck/pkg/tci"
 )
 
 var rootFlags = struct {
@@ -24,6 +25,7 @@ var rootFlags = struct {
 	brightness    int
 	configFile    string
 	hamlibAddress string
+	tciAddress    string
 }{}
 
 var rootCmd = &cobra.Command{
@@ -43,7 +45,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&rootFlags.serial, "serial", "", "the serial number of the Stream Deck device that should be used")
 	rootCmd.PersistentFlags().IntVar(&rootFlags.brightness, "brightness", 100, "the initial brightness of the Stream Deck device")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.configFile, "config", "", "the configuration file that should be used (default: .config/hamradio/hamdeck.json)")
-	rootCmd.PersistentFlags().StringVar(&rootFlags.hamlibAddress, "hamlib", "", "the address of the rigctld server (default: localhost:4532)")
+	rootCmd.PersistentFlags().StringVar(&rootFlags.hamlibAddress, "hamlib", "", "the address of the rigctld server (if empty, hamlib buttons are not available")
+	rootCmd.PersistentFlags().StringVar(&rootFlags.tciAddress, "tci", "", "the address of the TCI server (if empty, tci buttons are not available)")
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -77,7 +80,12 @@ func run(cmd *cobra.Command, args []string) {
 
 	deck := hamdeck.New(device)
 	deck.RegisterFactory(pulse.NewButtonFactory())
-	deck.RegisterFactory(hamlib.NewButtonFactory(rootFlags.hamlibAddress))
+	if rootFlags.hamlibAddress != "" {
+		deck.RegisterFactory(hamlib.NewButtonFactory(rootFlags.hamlibAddress))
+	}
+	if rootFlags.tciAddress != "" {
+		deck.RegisterFactory(tci.NewButtonFactory(rootFlags.tciAddress))
+	}
 
 	err = configureHamDeck(deck, rootFlags.configFile)
 	if err != nil {

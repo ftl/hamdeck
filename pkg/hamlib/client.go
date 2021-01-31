@@ -5,8 +5,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/ftl/hamdeck/pkg/hamdeck"
 	"github.com/ftl/rigproxy/pkg/client"
+
+	"github.com/ftl/hamdeck/pkg/hamdeck"
 )
 
 type ReconnectListener interface {

@@ -126,7 +126,7 @@ func (b *SetModeButton) OnLongpress() {
 	if !b.enabled {
 		return
 	}
-	frequency := findModePortionStart(b.currentFrequency, b.bandplanMode)
+	frequency := findModePortionCenter(b.currentFrequency, b.bandplanMode)
 	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetFrequency(ctx, frequency)
 	if err != nil {
@@ -142,7 +142,7 @@ func isInModePortion(f client.Frequency, mode bandplan.Mode) bool {
 	return currentPortion.Mode == mode
 }
 
-func findModePortionStart(f client.Frequency, mode bandplan.Mode) client.Frequency {
+func findModePortionCenter(f client.Frequency, mode bandplan.Mode) client.Frequency {
 	band := bandplan.IARURegion1.ByFrequency(f)
 	var modePortion bandplan.Portion
 	var currentPortion bandplan.Portion
@@ -158,12 +158,12 @@ func findModePortionStart(f client.Frequency, mode bandplan.Mode) client.Frequen
 		}
 	}
 	if currentPortion.Mode == mode {
-		return currentPortion.From
+		return currentPortion.Center()
 	}
 	if modePortion.Mode == mode {
-		return modePortion.From
+		return modePortion.Center()
 	}
-	return band.From
+	return band.Center()
 }
 
 func findPortion(f client.Frequency) (bandplan.Portion, bool) {
@@ -313,7 +313,7 @@ func (b *ToggleModeButton) OnLongpress() {
 	if !b.enabled {
 		return
 	}
-	frequency := findModePortionStart(b.currentFrequency, b.bandplanModes[b.currentMode])
+	frequency := findModePortionCenter(b.currentFrequency, b.bandplanModes[b.currentMode])
 	ctx := b.client.WithRequestTimeout()
 	err := b.client.Conn.SetFrequency(ctx, frequency)
 	if err != nil {
@@ -388,17 +388,18 @@ func (b *SetButton) Released() {
 	SwitchToBandButton
 */
 
-func NewSwitchToBandButton(hamlibClient *HamlibClient, label string, bandName string) *SwitchToBandButton {
+func NewSwitchToBandButton(hamlibClient *HamlibClient, label string, bandName string, useUpDown bool) *SwitchToBandButton {
 	band, ok := bandplan.IARURegion1[bandplan.BandName(bandName)]
 	if !ok {
 		log.Printf("cannot find band %s in IARU Region 1 bandplan", bandName)
 		return nil
 	}
 	result := &SwitchToBandButton{
-		client:  hamlibClient,
-		enabled: hamlibClient.Connected(),
-		label:   label,
-		band:    band,
+		client:    hamlibClient,
+		enabled:   hamlibClient.Connected(),
+		label:     label,
+		band:      band,
+		useUpDown: useUpDown,
 	}
 
 	hamlibClient.Listen(result)
@@ -415,6 +416,8 @@ type SwitchToBandButton struct {
 	selected      bool
 	label         string
 	band          bandplan.Band
+	mode          client.Mode
+	useUpDown     bool
 }
 
 func (b *SwitchToBandButton) Enable(enabled bool) {
@@ -432,6 +435,10 @@ func (b *SwitchToBandButton) SetFrequency(frequency client.Frequency) {
 		return
 	}
 	b.Invalidate(false)
+}
+
+func (b *SwitchToBandButton) SetMode(mode client.Mode) {
+	b.mode = mode
 }
 
 func (b *SwitchToBandButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
@@ -463,10 +470,24 @@ func (b *SwitchToBandButton) Pressed() {
 	if !b.enabled {
 		return
 	}
-	ctx := b.client.WithRequestTimeout()
-	err := b.client.Conn.SwitchToBand(ctx, b.band)
-	if err != nil {
-		log.Print(err)
+	if b.useUpDown {
+		ctx := b.client.WithRequestTimeout()
+		err := b.client.Conn.SwitchToBand(ctx, b.band)
+		if err != nil {
+			log.Print(err)
+		}
+	} else {
+		frequency := findModePortionCenter(b.band.Center(), b.mode.ToBandplanMode())
+		ctx := b.client.WithRequestTimeout()
+		err := b.client.Conn.SetFrequency(ctx, frequency)
+		if err != nil {
+			log.Printf("cannot switch to band %s: %v", b.band, err)
+		}
+		ctx = b.client.WithRequestTimeout()
+		err = b.client.Conn.SetModeAndPassband(ctx, b.mode, 0)
+		if err != nil {
+			log.Printf("cannot switch band to mode %s: %v", b.mode, err)
+		}
 	}
 }
 

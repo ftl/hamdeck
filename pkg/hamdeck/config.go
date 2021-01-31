@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -126,6 +127,24 @@ func ToFloat(raw interface{}) (float64, bool) {
 		return parsedF, true
 	default:
 		return 0, false
+	}
+}
+
+func ToBool(raw interface{}) (bool, bool) {
+	if raw == nil {
+		return false, false
+	}
+	switch s := raw.(type) {
+	case int:
+		return s != 0, true
+	case float64:
+		return s != 0, true
+	case string:
+		return strings.ToLower(s) == "true", true
+	case bool:
+		return s, true
+	default:
+		return false, false
 	}
 }
 
