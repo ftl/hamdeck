@@ -12,6 +12,7 @@ import (
 	"github.com/ftl/hamradio/cfg"
 	"github.com/spf13/cobra"
 
+	"github.com/ftl/hamdeck/pkg/atu100"
 	"github.com/ftl/hamdeck/pkg/hamdeck"
 	"github.com/ftl/hamdeck/pkg/hamlib"
 	"github.com/ftl/hamdeck/pkg/pulse"
@@ -26,6 +27,9 @@ var rootFlags = struct {
 	configFile    string
 	hamlibAddress string
 	tciAddress    string
+	mqttAddress   string
+	mqttUsername  string
+	mqttPassword  string
 }{}
 
 var rootCmd = &cobra.Command{
@@ -47,6 +51,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&rootFlags.configFile, "config", "", "the configuration file that should be used (default: .config/hamradio/hamdeck.json)")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.hamlibAddress, "hamlib", "", "the address of the rigctld server (if empty, hamlib buttons are not available")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.tciAddress, "tci", "", "the address of the TCI server (if empty, tci buttons are not available)")
+	rootCmd.PersistentFlags().StringVar(&rootFlags.mqttAddress, "mqtt", "", "the address of the MQTT server (if empty, atu100 buttons are not available)")
+	rootCmd.PersistentFlags().StringVar(&rootFlags.mqttUsername, "mqttusername", "", "the username for MQTT")
+	rootCmd.PersistentFlags().StringVar(&rootFlags.mqttPassword, "mqttpassword", "", "the password for MQTT")
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -85,6 +92,9 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	if rootFlags.tciAddress != "" {
 		deck.RegisterFactory(tci.NewButtonFactory(rootFlags.tciAddress))
+	}
+	if rootFlags.mqttAddress != "" {
+		deck.RegisterFactory(atu100.NewButtonFactory(rootFlags.mqttAddress, rootFlags.mqttUsername, rootFlags.mqttPassword))
 	}
 
 	err = configureHamDeck(deck, rootFlags.configFile)

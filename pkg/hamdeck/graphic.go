@@ -28,6 +28,8 @@ var (
 	Yellow       = color.RGBA{255, 255, 0, 255}
 	Magenta      = color.RGBA{255, 0, 255, 255}
 	Cyan         = color.RGBA{0, 255, 255, 255}
+	DarkGreen    = color.RGBA{0, 150, 0, 255}
+	Orange       = color.RGBA{255, 165, 0, 255}
 )
 
 var (

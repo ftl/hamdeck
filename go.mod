@@ -10,6 +10,7 @@ go 1.15
 // replace github.com/jfreymuth/pulse => ../pulse
 
 require (
+	github.com/eclipse/paho.mqtt.golang v1.3.1
 	github.com/fogleman/gg v1.3.0
 	github.com/ftl/hamradio v0.0.0-20200721200456-334cc249f095
 	github.com/ftl/rigproxy v0.0.0-20200812132905-1b8d78e5c89e
