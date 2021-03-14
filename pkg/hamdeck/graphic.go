@@ -14,6 +14,8 @@ import (
 	"os"
 
 	"github.com/fogleman/gg"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
 
 	"github.com/ftl/hamdeck/pkg/bindata"
 )
@@ -35,7 +37,7 @@ var (
 var (
 	DefaultBackground = Black
 	DefaultForeground = White
-	DefaultFont       = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+	DefaultFont       = "DejaVuSans.ttf"
 	DefaultFontSize   = 24.0
 )
 
@@ -51,7 +53,7 @@ type GC struct {
 	pixels     int
 	background color.Color
 	foreground color.Color
-	fontFile   string
+	fontName   string
 	fontSize   float64
 }
 
@@ -62,7 +64,7 @@ func (gc *GC) Pixels() int {
 func (gc *GC) Reset() {
 	gc.background = DefaultBackground
 	gc.foreground = DefaultForeground
-	gc.fontFile = DefaultFont
+	gc.fontName = DefaultFont
 	gc.fontSize = DefaultFontSize
 }
 
@@ -81,7 +83,7 @@ func (gc *GC) SwapColors() {
 }
 
 func (gc *GC) SetFont(filename string) {
-	gc.fontFile = filename
+	gc.fontName = filename
 }
 
 func (gc *GC) SetFontSize(points float64) {
@@ -104,12 +106,7 @@ func (gc *GC) DrawNoButton() image.Image {
 func (gc *GC) DrawSingleLineTextButton(text string) image.Image {
 	result, ctx := gc.newImage()
 
-	err := ctx.LoadFontFace(gc.fontFile, gc.fontSize)
-	if err != nil {
-		log.Print(err)
-		return gc.DrawNoButton()
-	}
-
+	ctx.SetFontFace(gc.LoadFontAsset(gc.fontName, gc.fontSize))
 	ctx.SetColor(gc.background)
 	ctx.Clear()
 	ctx.SetColor(gc.foreground)
@@ -132,22 +129,14 @@ func (gc *GC) DrawDoubleLineToggleTextButton(text1, text2 string, activeLine int
 	if activeLine != 1 {
 		fontSize = smallSize
 	}
-	err := ctx.LoadFontFace(gc.fontFile, fontSize)
-	if err != nil {
-		log.Print(err)
-		return gc.DrawNoButton()
-	}
+	ctx.SetFontFace(gc.LoadFontAsset(gc.fontName, fontSize))
 	ctx.DrawStringAnchored(text1, 0.5*float64(gc.pixels), 0.25*float64(gc.pixels), 0.5, 0.5)
 
 	fontSize = bigSize
 	if activeLine != 2 {
 		fontSize = smallSize
 	}
-	err = ctx.LoadFontFace(gc.fontFile, fontSize)
-	if err != nil {
-		log.Print(err)
-		return gc.DrawNoButton()
-	}
+	ctx.SetFontFace(gc.LoadFontAsset(gc.fontName, fontSize))
 	ctx.DrawStringAnchored(text2, 0.5*float64(gc.pixels), 0.75*float64(gc.pixels), 0.5, 0.5)
 
 	return result
@@ -172,11 +161,47 @@ func (gc *GC) LoadIconFromReader(r io.Reader) (image.Image, error) {
 
 func (gc *GC) LoadIconAsset(name string) image.Image {
 	assetName := fmt.Sprintf("img/%s", name)
-	icon, err := gc.LoadIconFromReader(bindata.AssetReader(assetName))
+	asset, err := bindata.Assets.Open(assetName)
+	if err != nil {
+		log.Fatalf("cannot open asset %s: %v", assetName, err)
+	}
+	defer asset.Close()
+
+	icon, err := gc.LoadIconFromReader(asset)
 	if err != nil {
 		log.Fatalf("cannot load asset %s: %v", assetName, err)
 	}
 	return icon
+}
+
+func (gc *GC) LoadFontFaceFromReader(r io.Reader, points float64) (font.Face, error) {
+	fontBytes, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	font, err := truetype.Parse(fontBytes)
+	if err != nil {
+		return nil, err
+	}
+	face := truetype.NewFace(font, &truetype.Options{
+		Size: points,
+	})
+	return face, nil
+}
+
+func (gc *GC) LoadFontAsset(name string, points float64) font.Face {
+	assetName := fmt.Sprintf("fonts/%s", name)
+	asset, err := bindata.Assets.Open(assetName)
+	if err != nil {
+		log.Fatalf("cannot open asset %s: %v", assetName, err)
+	}
+	defer asset.Close()
+
+	face, err := gc.LoadFontFaceFromReader(asset, points)
+	if err != nil {
+		log.Fatalf("cannot load asset %s: %v", assetName, err)
+	}
+	return face
 }
 
 func (gc *GC) DrawIconButton(icon image.Image) image.Image {
@@ -206,12 +231,7 @@ func (gc *GC) DrawIconButton(icon image.Image) image.Image {
 func (gc *GC) DrawIconLabelButton(icon image.Image, label string) image.Image {
 	result, ctx := gc.newImage()
 
-	err := ctx.LoadFontFace(gc.fontFile, gc.fontSize)
-	if err != nil {
-		log.Print(err)
-		return gc.DrawNoButton()
-	}
-
+	ctx.SetFontFace(gc.LoadFontAsset(gc.fontName, gc.fontSize))
 	ctx.SetColor(gc.background)
 	ctx.Clear()
 	ctx.SetColor(gc.foreground)

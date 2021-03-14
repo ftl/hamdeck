@@ -98,4 +98,6 @@ This tool is published under the [MIT License](https://www.tldrlegal.com/l/mit).
 
 This repository and also the binary contains images from [https://material.io](https://material.io/resources/icons/), which are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
+This repository and also the binary contains the DejaVuSans font version 2.37 from [https://dejavu-fonts.github.io/](https://dejavu-fonts.github.io/), which is licensed under a [free license](https://dejavu-fonts.github.io/License.html).
+
 Copyright [Florian Thienel](http://thecodingflow.com/)
