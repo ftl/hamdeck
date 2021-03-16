@@ -38,7 +38,10 @@ var rootCmd = &cobra.Command{
 	Run:   run,
 }
 
-func Execute() {
+var version string
+
+func Execute(v string) {
+	version = v
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
@@ -57,6 +60,7 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	log.Printf("Hamdeck Version %s", version)
 	shutdown := monitorShutdownSignals()
 
 	if rootFlags.syslog {

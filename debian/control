@@ -1,0 +1,17 @@
+Source: hamdeck
+Section: ham
+Priority: extra
+Maintainer: Florian Thienel <ftl@thecodingflow.com>
+Homepage: http://github.com/ftl/hamdeck
+Build-Depends: 
+    debhelper (>= 12),
+    golang-go (>= 2:1.16),
+    libhidapi-libusb0 (>= 0.9)
+
+Package: hamdeck
+Architecture: amd64 i386 armhf
+Recommends: pulseaudio
+Description: HamDeck allows you to control and automate your ham radio station
+    using an Elgato Stream Deck device. You can define buttons using a JSON
+    configuration file. HamDeck connects to the local pulseaudio server, to a
+    Hamlib rigctld server, or to ExpertSDR through the TCI protocol.

@@ -1,0 +1,7 @@
+[Unit]
+Description=HamDeck
+After=syslog.target dev-hamdeck.device
+BindsTo=dev-hamdeck.device
+
+[Service]
+ExecStart=/usr/bin/hamdeck --syslog --hamlib=localhost:4534 --config=/usr/share/hamdeck/example_conf.json

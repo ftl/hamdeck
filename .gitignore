@@ -1,3 +1,9 @@
 /hamdeck
 /cmd/pulse.go
 /cmd/hamlib.go
+
+/debian/hamdeck/
+/debian/.debhelper/
+/debian/files
+/debian/*.log
+/debian/*.substvars
