@@ -1,5 +1,5 @@
 OUT := hamdeck
-VERSION ?= "develop"
+VERSION?=$(shell echo `git rev-parse --abbrev-ref HEAD`-`git rev-parse --verify HEAD | head -c10`)
 
 all: test build
 
