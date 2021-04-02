@@ -17,11 +17,7 @@ This tool is written in Go on Linux. It might also work on OSX or Windows, but I
 
 ## Build
 
-Binary data, e.g. icons, are stored in the sub-directories of `pkg/bindata`. All files are embedded using `go-bindata`. If you make any changes, you need to execute
-
-```
-go generate ./...
-```
+Binary data, e.g. icons, are stored in the sub-directories of `pkg/bindata`. All files are automatically embedded using the Go embed package (new with Go 1.16) when the `hamdeck` binary is compiled.
 
 To build the `hamdeck` binary simply run
 
@@ -57,13 +53,13 @@ The last command will give you the path to the installed binary, which you will 
 
 2. Adding UDEV rules for the stream deck
 
-Create `/etc/udev/rules.d/99-streamdeck.rules` with the following content:
+Create `/etc/udev/rules.d/99-hamdeck.rules` with the following content:
 
 ```
-ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev", SYMLINK="streamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
-ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev", SYMLINK="streamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
-ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev", SYMLINK="streamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
-ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev", SYMLINK="streamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev", SYMLINK="hamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev", SYMLINK="hamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev", SYMLINK="hamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev", SYMLINK="hamdeck", TAG+="systemd", ENV{SYSTEMD_WANTS}="hamdeck.service"
 
 ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="fd9/60/*", TAG+="systemd"
 ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="fd9/63/*", TAG+="systemd"
@@ -81,11 +77,10 @@ Create `/etc/systemd/system/hamdeck.service` with the following content:
 [Unit]
 Description=HamDeck
 After=syslog.target dev-streamdeck.device
-BindsTo=dev-streamdeck.device
+BindsTo=dev-hamdeck.device
 
 [Service]
 ExecStart=<hamdeck binary, see above> --syslog --config=<your config file>
-User=<your username>
 ```
 
 ## Links
