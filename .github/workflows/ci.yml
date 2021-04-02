@@ -1,0 +1,48 @@
+name: Continuous Build
+
+on:
+  push:
+    branches: 
+    - master
+    - "**"
+  pull_request:
+    branches: 
+    - master
+
+jobs:
+
+  build:
+    name: Continuous Build
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Install Linux packages
+      run: sudo apt update && sudo apt install -y --no-install-recommends debhelper libhidapi-libusb0
+      
+    - name: Set up Go 1.16
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+        
+    - name: Caching build artifacts and modules
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+
+    - name: Get dependencies
+      run: go get -v -t -d ./...
+
+    - name: Build and Test
+      run: env VERSION=ci@$GITHUB_REF make
+
+    - name: 'Upload binary for linux_x86_64'
+      uses: actions/upload-artifact@v2
+      with:
+        name: hamdeck-binary
+        path: ./hamdeck

@@ -1,0 +1,72 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+    - 'v*.*.*'
+    branches:
+    - releng
+
+jobs:
+
+  build:
+    name: Release Build
+    runs-on: ubuntu-20.04
+    steps:
+    - id: version_number
+      run: echo "::set-output name=version_number::$(echo '${{github.ref}}' | sed -E 's#refs/tags/v##')"
+    
+    - name: Install Linux packages
+      run: sudo apt update && sudo apt install -y --no-install-recommends debhelper libhidapi-libusb0
+
+    - name: Set up Go 1.16
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+        
+    - name: Caching build artifacts and modules
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+
+    - name: Get dependencies
+      run: go get -v -t -d ./...
+
+    - name: Build and Test
+      run: |
+        echo "Version ${{ steps.version_number.outputs.version_number }}"
+        env VERSION="${{ steps.version_number.outputs.version_number }}" make
+
+    - name: Create package structure
+      run: |
+        mkdir -p ./.debpkg/usr/bin
+        cp ./hamdeck ./.debpkg/usr/bin/hamdeck
+        chmod +x ./.debpkg/usr/bin/hamdeck
+        mkdir -p ./.debpkg/usr/share/hamdeck
+        cp ./example_conf.json ./.debpkg/usr/share/hamdeck/example_conf.json
+
+    - name: Create deb package
+      run: ./build-debpkg.sh ${{ steps.version_number.outputs.version_number }}
+
+    - id: package_filename
+      run: echo "::set-output name=package_filename::$(ls ./hamdeck*.deb | head -n 1)"
+
+    - name: 'Upload package for linux_x86_64'
+      uses: actions/upload-artifact@v2
+      with:
+        name: hamdeck-package
+        path: ./hamdeck*.deb
+
+    - name: Upload package to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{ steps.package_filename.outputs.package_filename }}
+        tag: ${{ github.ref }}
