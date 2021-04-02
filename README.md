@@ -38,7 +38,7 @@ The buttons for Hamlib and TCI are only available if you provide a corresponding
 
 You can have both connections open at the same time.
 
-## Install
+## Install from Source
 
 The following describes the steps how to install `hamdeck` on an Ubuntu 20.04 LTS (Focal Fossa) to start automatically when you plug-in your the Stream Deck device.
 
@@ -82,6 +82,17 @@ BindsTo=dev-hamdeck.device
 [Service]
 ExecStart=<hamdeck binary, see above> --syslog --config=<your config file>
 ```
+
+## Install the DEB Package
+
+Under [https://github.com/ftl/hamdeck/releases/latest](https://github.com/ftl/hamdeck/releases/latest) you find the latest release of HamDeck als DEB package. This can be used to install HamDeck on distributions that are based on Debian (e.g. Ubuntu). The package installs the following files:
+
+* `/usr/bin/hamdeck` - the executable binary
+* `/lib/systemd/system/hamdeck.service` - the systemd service definition
+* `/lib/udev/99-hamdeck.rules` - the udev rules
+* `/usr/share/hamdeck/example_conf.json` - an example configuration that is used by the systemd service by default
+
+After installing the package, you should adapt `/lib/system/system/hamdeck.service` and `/usr/share/hamdeck/example_conf.json` according to your needs.
 
 ## Links
 
