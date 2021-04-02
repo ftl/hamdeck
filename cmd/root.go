@@ -20,7 +20,11 @@ import (
 	"github.com/ftl/hamdeck/pkg/tci"
 )
 
-var version string = "develop"
+var (
+	version   string = "development"
+	gitCommit string = "unknown"
+	buildTime string = "unknown"
+)
 
 var rootFlags = struct {
 	syslog        bool
@@ -52,7 +56,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&rootFlags.serial, "serial", "", "the serial number of the Stream Deck device that should be used")
 	rootCmd.PersistentFlags().IntVar(&rootFlags.brightness, "brightness", 100, "the initial brightness of the Stream Deck device")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.configFile, "config", "", "the configuration file that should be used (default: .config/hamradio/hamdeck.json)")
-	rootCmd.PersistentFlags().StringVar(&rootFlags.hamlibAddress, "hamlib", "", "the address of the rigctld server (if empty, hamlib buttons are not available")
+	rootCmd.PersistentFlags().StringVar(&rootFlags.hamlibAddress, "hamlib", "", "the address of the rigctld server (if empty, hamlib buttons are not available)")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.tciAddress, "tci", "", "the address of the TCI server (if empty, tci buttons are not available)")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.mqttAddress, "mqtt", "", "the address of the MQTT server (if empty, atu100 buttons are not available)")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.mqttUsername, "mqttusername", "", "the username for MQTT")
