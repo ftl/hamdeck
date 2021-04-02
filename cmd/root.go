@@ -20,6 +20,8 @@ import (
 	"github.com/ftl/hamdeck/pkg/tci"
 )
 
+var version string = "develop"
+
 var rootFlags = struct {
 	syslog        bool
 	serial        string
@@ -33,15 +35,13 @@ var rootFlags = struct {
 }{}
 
 var rootCmd = &cobra.Command{
-	Use:   "hamdeck",
-	Short: "HamDeck - control your ham radio station with a Stream Deck",
-	Run:   run,
+	Use:     "hamdeck",
+	Short:   "HamDeck Version " + version + " - control your ham radio station with an Elgato Stream Deck",
+	Version: version,
+	Run:     run,
 }
 
-var version string
-
-func Execute(v string) {
-	version = v
+func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
