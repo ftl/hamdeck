@@ -1,5 +1,5 @@
 OUT := hamdeck
-VERSION?=$(shell echo development@`git rev-parse --abbrev-ref HEAD`-`git rev-parse --verify --short HEAD`)
+VERSION?=$(shell git describe --tags)
 GITCOMMIT=$(shell git rev-parse --verify --short HEAD)
 BUILDTIME=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
