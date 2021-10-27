@@ -349,7 +349,6 @@ func (b *ToggleModeButton) redrawImages(gc hamdeck.GraphicContext) {
 	}
 	text := make([]string, 2)
 	for i := range text {
-		log.Printf("mode %s label %s", string(b.modes[i]), b.labels[i])
 		text[i] = string(b.modes[i])
 		if b.labels[i] != "" {
 			text[i] = b.labels[i]
@@ -397,6 +396,101 @@ func (b *ToggleModeButton) OnLongpress() {
 	if err != nil {
 		log.Printf("cannot jump to the beginning of the %s band portion: %v", b.bandplanModes[b.selectedModeIndex], err)
 	}
+}
+
+/*
+	SetFilterButton
+*/
+
+func NewSetFilterButton(tciClient *Client, bottomFrequency int, topFrequency int, label string) *SetFilterButton {
+	result := &SetFilterButton{
+		client:          tciClient,
+		enabled:         tciClient.Connected(),
+		selected:        make(map[int]bool),
+		bottomFrequency: bottomFrequency,
+		topFrequency:    topFrequency,
+		label:           label,
+		currentTRX:      0,
+	}
+
+	tciClient.Notify(result)
+
+	return result
+}
+
+type SetFilterButton struct {
+	hamdeck.BaseButton
+	client          *Client
+	image           image.Image
+	selectedImage   image.Image
+	enabled         bool
+	selected        map[int]bool
+	bottomFrequency int
+	topFrequency    int
+	label           string
+	currentTRX      int
+}
+
+func (b *SetFilterButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.Invalidate(true)
+}
+
+func (b *SetFilterButton) SetTRX(trx int) {
+	wasSelected := b.selected[b.currentTRX]
+	b.currentTRX = trx
+	if b.selected[trx] != wasSelected {
+		b.Invalidate(false)
+	}
+}
+
+func (b *SetFilterButton) SetRXFilterBand(trx int, min, max int) {
+	wasSelected := b.selected[trx]
+	b.selected[trx] = (b.bottomFrequency == min) && (b.topFrequency == max)
+
+	if (trx == b.currentTRX) && (b.selected[trx] != wasSelected) {
+		b.Invalidate(false)
+	}
+}
+
+func (b *SetFilterButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.image == nil || b.selectedImage == nil || redrawImages {
+		b.redrawImages(gc)
+	}
+	if b.selected[b.currentTRX] {
+		return b.selectedImage
+	}
+	return b.image
+}
+
+func (b *SetFilterButton) redrawImages(gc hamdeck.GraphicContext) {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+
+	b.image = gc.DrawIconLabelButton(gc.LoadIconAsset("filter.png"), b.label)
+
+	gc.SwapColors()
+	b.selectedImage = gc.DrawIconLabelButton(gc.LoadIconAsset("filter.png"), b.label)
+}
+
+func (b *SetFilterButton) Pressed() {
+	if !b.enabled {
+		return
+	}
+	err := b.client.SetRXFilterBand(b.currentTRX, b.bottomFrequency, b.topFrequency)
+	if err != nil {
+		log.Printf("cannot set rx filter band: %v", err)
+	}
+}
+
+func (b *SetFilterButton) Released() {
+	// ignore
 }
 
 /*

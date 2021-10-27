@@ -13,22 +13,25 @@ import (
 )
 
 const (
-	ConfigCommand   = "command"
-	ConfigArgs      = "args"
-	ConfigMode      = "mode"
-	ConfigLabel     = "label"
-	ConfigMode1     = "mode1"
-	ConfigLabel1    = "label1"
-	ConfigMode2     = "mode2"
-	ConfigLabel2    = "label2"
-	ConfigBand      = "band"
-	ConfigValue     = "value"
-	ConfigIncrement = "increment"
+	ConfigCommand         = "command"
+	ConfigArgs            = "args"
+	ConfigMode            = "mode"
+	ConfigLabel           = "label"
+	ConfigMode1           = "mode1"
+	ConfigLabel1          = "label1"
+	ConfigMode2           = "mode2"
+	ConfigLabel2          = "label2"
+	ConfigBand            = "band"
+	ConfigValue           = "value"
+	ConfigIncrement       = "increment"
+	ConfigBottomFrequency = "bottom_frequency"
+	ConfigTopFrequency    = "top_frequency"
 )
 
 const (
 	SetModeButtonType         = "tci.SetMode"
 	ToggleModeButtonType      = "tci.ToggleMode"
+	SetFilterButtonType       = "tci.SetFilter"
 	MOXButtonType             = "tci.MOX"
 	TuneButtonType            = "tci.Tune"
 	MuteButtonType            = "tci.Mute"
@@ -65,6 +68,8 @@ func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
 		return f.createSetModeButton(config)
 	case ToggleModeButtonType:
 		return f.createToggleModeButton(config)
+	case SetFilterButtonType:
+		return f.createSetFilterButton(config)
 	case MOXButtonType:
 		return f.createMOXButton(config)
 	case TuneButtonType:
@@ -106,6 +111,26 @@ func (f *Factory) createToggleModeButton(config map[string]interface{}) hamdeck.
 	}
 
 	return NewToggleModeButton(f.client, client.Mode(strings.ToLower(mode1)), label1, client.Mode(strings.ToLower(mode2)), label2)
+}
+
+func (f *Factory) createSetFilterButton(config map[string]interface{}) hamdeck.Button {
+	bottomFrequency, haveBottomFrequency := hamdeck.ToInt(config[ConfigBottomFrequency])
+	topFrequency, haveTopFrequency := hamdeck.ToInt(config[ConfigTopFrequency])
+	label, haveLabel := hamdeck.ToString(config[ConfigLabel])
+	if !haveBottomFrequency {
+		log.Print("A tci.SetFilter button must have a bottom_frequency field.")
+		return nil
+	}
+	if !haveTopFrequency {
+		log.Print("A tci.SetFilter button must have a top_frequency field.")
+		return nil
+	}
+	if !haveLabel {
+		log.Print("A tci.SetFilter button must have a label field.")
+		return nil
+	}
+
+	return NewSetFilterButton(f.client, bottomFrequency, topFrequency, label)
 }
 
 func (f *Factory) createMOXButton(config map[string]interface{}) hamdeck.Button {

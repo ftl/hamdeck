@@ -1,6 +1,6 @@
 module github.com/ftl/hamdeck
 
-go 1.16
+go 1.17
 
 // replace github.com/ftl/tci => ../tci
 
@@ -20,4 +20,13 @@ require (
 	github.com/muesli/streamdeck v0.0.0-20200514174954-dd59ecb861aa
 	github.com/spf13/cobra v1.1.1
 	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
+)
+
+require (
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/karalabe/hid v1.0.1-0.20190806082151-9c14560f9ee8 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
+	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0 // indirect
 )

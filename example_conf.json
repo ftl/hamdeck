@@ -109,6 +109,34 @@
 			"args": ["CPY"]
 		},
 		{
+			"type": "tci.SetFilter",
+			"index": 19,
+			"label": "CW100",
+			"bottom_frequency": -50,
+			"top_frequency": 50
+		},
+		{
+			"type": "tci.SetFilter",
+			"index": 20,
+			"label": "CW300",
+			"bottom_frequency": -150,
+			"top_frequency": 150
+		},
+		{
+			"type": "tci.SetFilter",
+			"index": 21,
+			"label": "DigU500",
+			"bottom_frequency": 1250,
+			"top_frequency": 1750
+		},
+		{
+			"type": "tci.SetFilter",
+			"index": 22,
+			"label": "DigU3k",
+			"bottom_frequency": 0,
+			"top_frequency": 3000
+		},
+		{
 			"type": "pulse.ToggleMute",
 			"index": 24,
 			"sink": "my.sink",
