@@ -21,6 +21,7 @@ const (
 	ConfigLabel1          = "label1"
 	ConfigMode2           = "mode2"
 	ConfigLabel2          = "label2"
+	ConfigIcon            = "icon"
 	ConfigBand            = "band"
 	ConfigValue           = "value"
 	ConfigIncrement       = "increment"
@@ -117,6 +118,7 @@ func (f *Factory) createSetFilterButton(config map[string]interface{}) hamdeck.B
 	bottomFrequency, haveBottomFrequency := hamdeck.ToInt(config[ConfigBottomFrequency])
 	topFrequency, haveTopFrequency := hamdeck.ToInt(config[ConfigTopFrequency])
 	label, haveLabel := hamdeck.ToString(config[ConfigLabel])
+	icon, haveIcon := hamdeck.ToString(config[ConfigIcon])
 	if !haveBottomFrequency {
 		log.Print("A tci.SetFilter button must have a bottom_frequency field.")
 		return nil
@@ -129,8 +131,10 @@ func (f *Factory) createSetFilterButton(config map[string]interface{}) hamdeck.B
 		log.Print("A tci.SetFilter button must have a label field.")
 		return nil
 	}
-
-	return NewSetFilterButton(f.client, bottomFrequency, topFrequency, label)
+	if !haveIcon {
+		icon = "filter"
+	}
+	return NewSetFilterButton(f.client, bottomFrequency, topFrequency, label, icon)
 }
 
 func (f *Factory) createMOXButton(config map[string]interface{}) hamdeck.Button {

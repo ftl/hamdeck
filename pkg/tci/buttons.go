@@ -12,11 +12,6 @@ import (
 	"github.com/ftl/hamdeck/pkg/hamdeck"
 )
 
-type vfoKey struct {
-	trx int
-	vfo client.VFO
-}
-
 /*
 	SetModeButton
 */
@@ -402,7 +397,7 @@ func (b *ToggleModeButton) OnLongpress() {
 	SetFilterButton
 */
 
-func NewSetFilterButton(tciClient *Client, bottomFrequency int, topFrequency int, label string) *SetFilterButton {
+func NewSetFilterButton(tciClient *Client, bottomFrequency int, topFrequency int, label string, icon string) *SetFilterButton {
 	result := &SetFilterButton{
 		client:          tciClient,
 		enabled:         tciClient.Connected(),
@@ -410,6 +405,7 @@ func NewSetFilterButton(tciClient *Client, bottomFrequency int, topFrequency int
 		bottomFrequency: bottomFrequency,
 		topFrequency:    topFrequency,
 		label:           label,
+		icon:            icon,
 		currentTRX:      0,
 	}
 
@@ -428,6 +424,7 @@ type SetFilterButton struct {
 	bottomFrequency int
 	topFrequency    int
 	label           string
+	icon            string
 	currentTRX      int
 }
 
@@ -467,16 +464,18 @@ func (b *SetFilterButton) Image(gc hamdeck.GraphicContext, redrawImages bool) im
 }
 
 func (b *SetFilterButton) redrawImages(gc hamdeck.GraphicContext) {
+	gc.SetFontSize(16)
 	if b.enabled {
 		gc.SetForeground(hamdeck.White)
 	} else {
 		gc.SetForeground(hamdeck.DisabledGray)
 	}
 
-	b.image = gc.DrawIconLabelButton(gc.LoadIconAsset("filter.png"), b.label)
+	iconFile := b.icon + ".png"
+	b.image = gc.DrawIconLabelButton(gc.LoadIconAsset(iconFile), b.label)
 
 	gc.SwapColors()
-	b.selectedImage = gc.DrawIconLabelButton(gc.LoadIconAsset("filter.png"), b.label)
+	b.selectedImage = gc.DrawIconLabelButton(gc.LoadIconAsset(iconFile), b.label)
 }
 
 func (b *SetFilterButton) Pressed() {

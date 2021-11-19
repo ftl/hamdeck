@@ -111,28 +111,32 @@
 		{
 			"type": "tci.SetFilter",
 			"index": 19,
-			"label": "CW100",
+			"label": "CW 100",
+			"icon": "filter_small",
 			"bottom_frequency": -50,
 			"top_frequency": 50
 		},
 		{
 			"type": "tci.SetFilter",
 			"index": 20,
-			"label": "CW300",
+			"label": "CW 300",
+			"icon": "filter_medium",
 			"bottom_frequency": -150,
 			"top_frequency": 150
 		},
 		{
 			"type": "tci.SetFilter",
 			"index": 21,
-			"label": "DigU500",
+			"label": "DigU 500",
+			"icon": "filter_small_usb",
 			"bottom_frequency": 1250,
 			"top_frequency": 1750
 		},
 		{
 			"type": "tci.SetFilter",
 			"index": 22,
-			"label": "DigU3k",
+			"label": "DigU 3k",
+			"icon": "filter_usb",
 			"bottom_frequency": 0,
 			"top_frequency": 3000
 		},
