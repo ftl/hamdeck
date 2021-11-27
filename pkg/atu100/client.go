@@ -95,7 +95,7 @@ func (c *Client) connectionLost(_ mqtt.Client, err error) {
 
 func (c *Client) messageReceived(_ mqtt.Client, msg mqtt.Message) {
 	topic := strings.ToLower(msg.Topic())
-	log.Printf("received MQTT message from topic: %s", topic)
+	//log.Printf("received MQTT message from topic: %s", topic)
 	path, suffix, ok := splitTopic(topic)
 	if !ok {
 		return

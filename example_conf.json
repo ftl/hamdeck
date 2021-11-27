@@ -114,7 +114,8 @@
 			"label": "CW 100",
 			"icon": "filter_small",
 			"bottom_frequency": -50,
-			"top_frequency": 50
+			"top_frequency": 50,
+			"mode": "CW"
 		},
 		{
 			"type": "tci.SetFilter",
@@ -122,7 +123,8 @@
 			"label": "CW 300",
 			"icon": "filter_medium",
 			"bottom_frequency": -150,
-			"top_frequency": 150
+			"top_frequency": 150,
+			"mode": "CW"
 		},
 		{
 			"type": "tci.SetFilter",
@@ -130,7 +132,8 @@
 			"label": "DigU 500",
 			"icon": "filter_small_usb",
 			"bottom_frequency": 1250,
-			"top_frequency": 1750
+			"top_frequency": 1750,
+			"mode": "PKTUSB"
 		},
 		{
 			"type": "tci.SetFilter",
@@ -138,7 +141,8 @@
 			"label": "DigU 3k",
 			"icon": "filter_usb",
 			"bottom_frequency": 0,
-			"top_frequency": 3000
+			"top_frequency": 3000,
+			"mode": "PKTUSB"
 		},
 		{
 			"type": "pulse.ToggleMute",

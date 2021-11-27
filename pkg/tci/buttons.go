@@ -397,17 +397,29 @@ func (b *ToggleModeButton) OnLongpress() {
 	SetFilterButton
 */
 
-func NewSetFilterButton(tciClient *Client, bottomFrequency int, topFrequency int, label string, icon string) *SetFilterButton {
-	result := &SetFilterButton{
-		client:          tciClient,
-		enabled:         tciClient.Connected(),
-		selected:        make(map[int]bool),
-		bottomFrequency: bottomFrequency,
-		topFrequency:    topFrequency,
-		label:           label,
-		icon:            icon,
-		currentTRX:      0,
+func NewSetFilterButton(tciClient *Client, bottomFrequency int, topFrequency int, mode client.Mode, label string, icon string) *SetFilterButton {
+	if bottomFrequency > topFrequency {
+		bottomFrequency, topFrequency = topFrequency, bottomFrequency
 	}
+
+	result := &SetFilterButton{
+		client:                 tciClient,
+		enabled:                tciClient.Connected(),
+		selected:               make(map[int]bool),
+		inModePortion:          make(map[int]bool),
+		mode:                   mode,
+		bandplanMode:           toBandplanMode(mode),
+		bottomFrequency:        bottomFrequency,
+		topFrequency:           topFrequency,
+		label:                  label,
+		icon:                   icon,
+		currentTRX:             0,
+		currentMode:            make(map[int]client.Mode),
+		currentFrequency:       make(map[int]int),
+		currentBottomFrequency: make(map[int]int),
+		currentTopFrequency:    make(map[int]int),
+	}
+	result.longpress = hamdeck.NewLongpressHandler(result.OnLongpress)
 
 	tciClient.Notify(result)
 
@@ -416,16 +428,25 @@ func NewSetFilterButton(tciClient *Client, bottomFrequency int, topFrequency int
 
 type SetFilterButton struct {
 	hamdeck.BaseButton
-	client          *Client
-	image           image.Image
-	selectedImage   image.Image
-	enabled         bool
-	selected        map[int]bool
-	bottomFrequency int
-	topFrequency    int
-	label           string
-	icon            string
-	currentTRX      int
+	client                 *Client
+	image                  image.Image
+	selectedImage          image.Image
+	inModePortionImage     image.Image
+	enabled                bool
+	selected               map[int]bool
+	inModePortion          map[int]bool
+	mode                   client.Mode
+	bandplanMode           bandplan.Mode
+	bottomFrequency        int
+	topFrequency           int
+	label                  string
+	icon                   string
+	currentTRX             int
+	currentMode            map[int]client.Mode
+	currentFrequency       map[int]int
+	currentBottomFrequency map[int]int
+	currentTopFrequency    map[int]int
+	longpress              *hamdeck.LongpressHandler
 }
 
 func (b *SetFilterButton) Enable(enabled bool) {
@@ -436,19 +457,64 @@ func (b *SetFilterButton) Enable(enabled bool) {
 	b.Invalidate(true)
 }
 
+func (b *SetFilterButton) selectedFor(trx int) bool {
+	mode := b.currentMode[trx]
+	bottomFrequency := b.currentBottomFrequency[trx]
+	topFrequency := b.currentTopFrequency[trx]
+
+	return (b.mode == "" || b.mode == mode) &&
+		(b.bottomFrequency == bottomFrequency) &&
+		(b.topFrequency == topFrequency)
+}
+
 func (b *SetFilterButton) SetTRX(trx int) {
-	wasSelected := b.selected[b.currentTRX]
 	b.currentTRX = trx
+
+	wasSelected := b.selected[trx]
+	b.selected[trx] = b.selectedFor(trx)
 	if b.selected[trx] != wasSelected {
 		b.Invalidate(false)
 	}
 }
 
-func (b *SetFilterButton) SetRXFilterBand(trx int, min, max int) {
-	wasSelected := b.selected[trx]
-	b.selected[trx] = (b.bottomFrequency == min) && (b.topFrequency == max)
+func (b *SetFilterButton) SetRXFilterBand(trx int, bottomFrequency, topFrequency int) {
+	if bottomFrequency > topFrequency {
+		bottomFrequency, topFrequency = topFrequency, bottomFrequency
+	}
 
+	b.currentBottomFrequency[trx] = bottomFrequency
+	b.currentTopFrequency[trx] = topFrequency
+
+	wasSelected := b.selected[trx]
+	b.selected[trx] = b.selectedFor(trx)
 	if (trx == b.currentTRX) && (b.selected[trx] != wasSelected) {
+		b.Invalidate(false)
+	}
+}
+
+func (b *SetFilterButton) SetMode(trx int, mode client.Mode) {
+	b.currentMode[trx] = mode
+
+	wasSelected := b.selected[trx]
+	b.selected[trx] = b.selectedFor(trx)
+	if (trx == b.currentTRX) && (b.selected[trx] != wasSelected) {
+		b.Invalidate(false)
+	}
+}
+
+func (b *SetFilterButton) SetVFOFrequency(trx int, vfo client.VFO, frequency int) {
+	if b.mode == "" {
+		return
+	}
+	if vfo != client.VFOA {
+		return
+	}
+	b.currentFrequency[trx] = frequency
+
+	wasInModePortion := b.inModePortion[trx]
+	b.inModePortion[trx] = isInModePortion(frequency, b.bandplanMode)
+	if (trx == b.currentTRX) && (b.inModePortion[trx] != wasInModePortion) {
+
 		b.Invalidate(false)
 	}
 }
@@ -459,6 +525,9 @@ func (b *SetFilterButton) Image(gc hamdeck.GraphicContext, redrawImages bool) im
 	}
 	if b.selected[b.currentTRX] {
 		return b.selectedImage
+	}
+	if b.inModePortion[b.currentTRX] {
+		return b.inModePortionImage
 	}
 	return b.image
 }
@@ -476,12 +545,25 @@ func (b *SetFilterButton) redrawImages(gc hamdeck.GraphicContext) {
 
 	gc.SwapColors()
 	b.selectedImage = gc.DrawIconLabelButton(gc.LoadIconAsset(iconFile), b.label)
+
+	gc.SwapColors()
+	gc.SetBackground(hamdeck.Blue)
+	b.inModePortionImage = gc.DrawIconLabelButton(gc.LoadIconAsset(iconFile), b.label)
 }
 
 func (b *SetFilterButton) Pressed() {
+	b.longpress.Pressed()
 	if !b.enabled {
 		return
 	}
+
+	if b.mode != "" {
+		err := b.client.SetMode(b.currentTRX, b.mode)
+		if err != nil {
+			log.Printf("cannot set mode: %v", err)
+		}
+	}
+
 	err := b.client.SetRXFilterBand(b.currentTRX, b.bottomFrequency, b.topFrequency)
 	if err != nil {
 		log.Printf("cannot set rx filter band: %v", err)
@@ -489,7 +571,26 @@ func (b *SetFilterButton) Pressed() {
 }
 
 func (b *SetFilterButton) Released() {
-	// ignore
+	b.longpress.Released()
+}
+
+func (b *SetFilterButton) OnLongpress() {
+	if !b.enabled {
+		return
+	}
+	if b.mode == "" {
+		return
+	}
+
+	frequency := findModePortionCenter(b.currentFrequency[b.currentTRX], b.bandplanMode)
+	err := b.client.SetDDS(b.currentTRX, frequency)
+	if err != nil {
+		log.Printf("cannot jump to the center of the %s band portion: %v", b.bandplanMode, err)
+	}
+	err = b.client.SetVFOFrequency(b.currentTRX, client.VFOA, frequency)
+	if err != nil {
+		log.Printf("cannot jump to the center of the %s band portion: %v", b.bandplanMode, err)
+	}
 }
 
 /*
