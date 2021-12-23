@@ -11,7 +11,7 @@ import (
 
 func NewClient(host *net.TCPAddr) *Client {
 	result := &Client{
-		Client: client.KeepOpen(host, 10*time.Second),
+		Client: client.KeepOpen(host, 10*time.Second, false),
 	}
 	result.Client.Notify(client.ConnectionListenerFunc(func(connected bool) {
 		hamdeck.NotifyEnablers(result.listeners, connected)

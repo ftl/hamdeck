@@ -85,7 +85,7 @@ type PulseClient struct {
 
 	retryInterval           time.Duration
 	connected               bool
-	onPulseConnectionClosed func()
+	onPulseConnectionClosed func(interface{})
 	done                    chan struct{}
 
 	listeners []interface{}
@@ -158,7 +158,11 @@ func (c *PulseClient) connect(whenClosed func()) error {
 		}
 	}
 
-	c.onPulseConnectionClosed = func() {
+	c.onPulseConnectionClosed = func(event interface{}) {
+		if _, isConnectionClosed := event.(*proto.ConnectionClosed); !isConnectionClosed {
+			return
+		}
+
 		c.connected = false
 		hamdeck.NotifyEnablers(c.listeners, false)
 
@@ -166,7 +170,7 @@ func (c *PulseClient) connect(whenClosed func()) error {
 			whenClosed()
 		}
 	}
-	c.client.OnConnectionClosed = c.onPulseConnectionClosed
+	c.client.Callback = c.onPulseConnectionClosed
 	return nil
 }
 
@@ -174,7 +178,7 @@ func (c *PulseClient) Close() {
 	close(c.done)
 	if c.connected {
 		c.conn.Close()
-		c.onPulseConnectionClosed()
+		c.onPulseConnectionClosed(&proto.ConnectionClosed{})
 	}
 }
 
