@@ -12,6 +12,7 @@ HamDeck allows you to control and automate your ham radio station using an Elgat
 * Get an indication on the mode buttons which modes are suitable to the current frequency according to the IARU Region 1 bandplan.
 * Jump to the center of the closest band portion suitable for your currently selected mode (press the mode button > 1s).
 * Control the major volume of ExpertSDR through TCI.
+* Set a mode and a custom filter band through TCI.
 
 This tool is written in Go on Linux. It might also work on OSX or Windows, but I did not try that out.
 
