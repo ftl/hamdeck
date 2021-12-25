@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"time"
 
 	"github.com/ftl/hamradio"
 	"github.com/ftl/hamradio/bandplan"
@@ -563,6 +564,10 @@ func (b *SetFilterButton) Pressed() {
 			log.Printf("cannot set mode: %v", err)
 		}
 	}
+
+	// add a grace period before setting the filter band, otherwise ExpertSDR will restore
+	// the last filter band for this mode and overwrite our setting
+	time.Sleep(200 * time.Millisecond)
 
 	err := b.client.SetRXFilterBand(b.currentTRX, b.bottomFrequency, b.topFrequency)
 	if err != nil {
