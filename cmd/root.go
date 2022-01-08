@@ -150,5 +150,12 @@ func configureHamDeck(deck *hamdeck.HamDeck, config string) error {
 	}
 	defer file.Close()
 
-	return deck.ReadConfig(file)
+	err = deck.ReadConfig(file)
+	if err != nil {
+		return err
+	}
+
+	deck.CloseUnusedFactories()
+
+	return nil
 }

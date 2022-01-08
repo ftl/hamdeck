@@ -85,13 +85,14 @@ type ButtonFactory interface {
 }
 
 type HamDeck struct {
-	device    Device
-	drawLock  *sync.Mutex
-	gc        GraphicContext
-	buttons   []Button
-	noButton  Button
-	flashOn   bool
-	factories []ButtonFactory
+	device            Device
+	drawLock          *sync.Mutex
+	gc                GraphicContext
+	buttons           []Button
+	noButton          Button
+	flashOn           bool
+	factories         []ButtonFactory
+	buttonsPerFactory []int
 }
 
 func New(device Device) *HamDeck {

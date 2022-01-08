@@ -38,17 +38,17 @@ func (d *HamDeck) ReadConfig(r io.Reader) error {
 
 	rawSubconfiguration, ok := configuration[ConfigMainKey]
 	if !ok {
-		return d.AttachConfiguredButtons(configuration)
+		return d.attachConfiguredButtons(configuration)
 	}
 
 	subconfiguration, ok := rawSubconfiguration.(map[string]interface{})
 	if !ok {
-		return d.AttachConfiguredButtons(configuration)
+		return d.attachConfiguredButtons(configuration)
 	}
-	return d.AttachConfiguredButtons(subconfiguration)
+	return d.attachConfiguredButtons(subconfiguration)
 }
 
-func (d *HamDeck) AttachConfiguredButtons(configuration map[string]interface{}) error {
+func (d *HamDeck) attachConfiguredButtons(configuration map[string]interface{}) error {
 	rawButtons, ok := configuration[ConfigButtons]
 	if !ok {
 		return fmt.Errorf("configuration contains no 'buttons' key")
@@ -59,6 +59,7 @@ func (d *HamDeck) AttachConfiguredButtons(configuration map[string]interface{}) 
 		return fmt.Errorf("'buttons' is not a list of button objects")
 	}
 
+	d.buttonsPerFactory = make([]int, len(d.factories))
 	for i, rawButtonConfig := range buttons {
 		buttonConfig, ok := rawButtonConfig.(map[string]interface{})
 		if !ok {
@@ -73,9 +74,10 @@ func (d *HamDeck) AttachConfiguredButtons(configuration map[string]interface{}) 
 		}
 
 		var button Button
-		for _, factory := range d.factories {
+		for j, factory := range d.factories {
 			button = factory.CreateButton(buttonConfig)
 			if button != nil {
+				d.buttonsPerFactory[j] += 1
 				break
 			}
 		}
@@ -88,6 +90,14 @@ func (d *HamDeck) AttachConfiguredButtons(configuration map[string]interface{}) 
 	}
 
 	return nil
+}
+
+func (d *HamDeck) CloseUnusedFactories() {
+	for i, factory := range d.factories {
+		if d.buttonsPerFactory[i] == 0 {
+			factory.Close()
+		}
+	}
 }
 
 func ToInt(raw interface{}) (int, bool) {
