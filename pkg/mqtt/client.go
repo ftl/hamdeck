@@ -1,4 +1,4 @@
-package atu100
+package mqtt
 
 import (
 	"encoding/json"

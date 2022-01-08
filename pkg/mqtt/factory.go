@@ -1,4 +1,4 @@
-package atu100
+package mqtt
 
 import (
 	"log"
@@ -12,7 +12,7 @@ const (
 )
 
 const (
-	TuneButtonType = "atu100.Tune"
+	TuneButtonType = "mqtt.AT100Tune"
 )
 
 func NewButtonFactory(address string, username string, password string) *Factory {
@@ -45,7 +45,7 @@ func (f *Factory) createTuneButton(config map[string]interface{}) hamdeck.Button
 	path, havePath := hamdeck.ToString(config[ConfigPath])
 
 	if !(haveLabel && havePath) {
-		log.Print("A atu100.Tune button must have label and path fields.")
+		log.Print("A mqtt.ATU100Tune button must have label and path fields.")
 		return nil
 	}
 

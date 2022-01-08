@@ -12,9 +12,9 @@ import (
 	"github.com/ftl/hamradio/cfg"
 	"github.com/spf13/cobra"
 
-	"github.com/ftl/hamdeck/pkg/atu100"
 	"github.com/ftl/hamdeck/pkg/hamdeck"
 	"github.com/ftl/hamdeck/pkg/hamlib"
+	"github.com/ftl/hamdeck/pkg/mqtt"
 	"github.com/ftl/hamdeck/pkg/pulse"
 	"github.com/ftl/hamdeck/pkg/streamdeck"
 	"github.com/ftl/hamdeck/pkg/tci"
@@ -102,7 +102,7 @@ func run(cmd *cobra.Command, args []string) {
 		deck.RegisterFactory(tci.NewButtonFactory(rootFlags.tciAddress))
 	}
 	if rootFlags.mqttAddress != "" {
-		deck.RegisterFactory(atu100.NewButtonFactory(rootFlags.mqttAddress, rootFlags.mqttUsername, rootFlags.mqttPassword))
+		deck.RegisterFactory(mqtt.NewButtonFactory(rootFlags.mqttAddress, rootFlags.mqttUsername, rootFlags.mqttPassword))
 	}
 
 	err = configureHamDeck(deck, rootFlags.configFile)
