@@ -15,11 +15,12 @@ const mqttWaitTimeout = 200 * time.Millisecond
 
 func NewClient(address string, username string, password string) *Client {
 	result := &Client{
-		address: address,
-		alive:   make(map[string]bool),
-		tx:      make(map[string]bool),
-		tuning:  make(map[string]bool),
-		swr:     make(map[string]float64),
+		address:     address,
+		alive:       make(map[string]bool),
+		tx:          make(map[string]bool),
+		tuning:      make(map[string]bool),
+		swr:         make(map[string]float64),
+		subscribers: make(map[string][]Subscriber),
 	}
 
 	opts := mqtt.NewClientOptions()
@@ -56,6 +57,12 @@ type Client struct {
 	tx     map[string]bool
 	tuning map[string]bool
 	swr    map[string]float64
+
+	subscribers map[string][]Subscriber
+}
+
+type Subscriber interface {
+	SetInput(topic string, payload string)
 }
 
 type atu100Data struct {
@@ -94,8 +101,15 @@ func (c *Client) connectionLost(_ mqtt.Client, err error) {
 }
 
 func (c *Client) messageReceived(_ mqtt.Client, msg mqtt.Message) {
-	topic := strings.ToLower(msg.Topic())
-	//log.Printf("received MQTT message from topic: %s", topic)
+	topic := strings.TrimSpace(msg.Topic())
+	// log.Printf("received MQTT message from topic: %s", topic)
+
+	topicSubscribers := c.subscribers[topic]
+	for _, subscriber := range topicSubscribers {
+		subscriber.SetInput(topic, string(msg.Payload()))
+	}
+
+	// notify the ATU100Tune buttons
 	path, suffix, ok := splitTopic(topic)
 	if !ok {
 		return
@@ -123,6 +137,24 @@ func splitTopic(topic string) (string, string, bool) {
 		return "", "", false
 	}
 	return topic[0:splitterIndex], topic[splitterIndex+1:], true
+}
+
+func (c *Client) Subscribe(s Subscriber, topics ...string) {
+	for _, topic := range topics {
+		topic = strings.TrimSpace(topic)
+		topicSubscribers, ok := c.subscribers[topic]
+		topicSubscribers = append(topicSubscribers, s)
+		c.subscribers[topic] = topicSubscribers
+
+		if !ok {
+			log.Printf("subscribing to %s", topic)
+			c.client.Subscribe(topic, 1, nil).WaitTimeout(mqttWaitTimeout)
+		}
+	}
+}
+
+func (c *Client) Publish(topic string, payload string) {
+	c.client.Publish(topic, 0, false, payload)
 }
 
 func (c *Client) AddPath(path string) {

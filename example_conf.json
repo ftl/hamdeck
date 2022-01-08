@@ -169,6 +169,36 @@
 			"label": "Source"
 		},
 		{
+			"type": "mqtt.Switch",
+			"index": 28,
+			"label": "Lights",
+            "inputTopic": "tasmota/smartplug1/stat/POWER",
+            "outputTopic": "tasmota/smartplug1/cmnd/POWER",
+            "onPayload": "ON",
+            "offPayload": "OFF",
+            "mode": "toggle"
+		},
+        {
+			"type": "mqtt.Switch",
+			"index": 29,
+			"label": "On",
+            "inputTopic": "tasmota/smartplug1/stat/POWER",
+            "outputTopic": "tasmota/smartplug1/cmnd/POWER",
+            "onPayload": "ON",
+            "offPayload": "OFF",
+            "mode": "ON"
+		},
+        {
+			"type": "mqtt.Switch",
+			"index": 20,
+			"label": "Off",
+            "inputTopic": "tasmota/smartplug1/stat/POWER",
+            "outputTopic": "tasmota/smartplug1/cmnd/POWER",
+            "onPayload": "ON",
+            "offPayload": "OFF",
+            "mode": "OFF"
+		},
+		{
 			"type": "hamlib.MOX",
 			"index": 31
 		}

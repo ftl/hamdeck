@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strings"
 
 	"github.com/ftl/hamdeck/pkg/hamdeck"
 )
@@ -151,5 +152,131 @@ func (b *TuneButton) Pressed() {
 }
 
 func (b *TuneButton) Released() {
+	// ignore
+}
+
+/*
+	SwitchButton
+*/
+
+func NewSwitchButton(client *Client, label string, inputTopic, outputTopic, onPayload, offPayload string, mode SwitchMode) *SwitchButton {
+	if label == "" {
+		label = "SW"
+	}
+
+	result := &SwitchButton{
+		client:      client,
+		enabled:     client.Connected(),
+		label:       label,
+		inputTopic:  inputTopic,
+		outputTopic: outputTopic,
+		onPayload:   onPayload,
+		offPayload:  offPayload,
+		mode:        mode,
+	}
+
+	client.Subscribe(result, inputTopic)
+
+	return result
+}
+
+type SwitchButton struct {
+	hamdeck.BaseButton
+	client      *Client
+	offImage    image.Image
+	onImage     image.Image
+	enabled     bool
+	on          bool
+	label       string
+	inputTopic  string
+	outputTopic string
+	onPayload   string
+	offPayload  string
+	mode        SwitchMode
+}
+
+type SwitchMode string
+
+const (
+	SwitchModeOn     SwitchMode = "ON"
+	SwitchModeOff    SwitchMode = "OFF"
+	SwitchModeToggle SwitchMode = "TOGGLE"
+)
+
+func (b *SwitchButton) Enable(enabled bool) {
+	if enabled == b.enabled {
+		return
+	}
+	b.enabled = enabled
+	b.Invalidate(true)
+}
+
+func (b *SwitchButton) SetInput(topic string, payload string) {
+	if topic != b.inputTopic {
+		return
+	}
+	payload = strings.TrimSpace(strings.ToUpper(payload))
+
+	wasOn := b.on
+	if b.mode == SwitchModeOff {
+		b.on = (payload == b.offPayload)
+	} else {
+		b.on = (payload == b.onPayload)
+	}
+
+	if b.on == wasOn {
+		return
+	}
+	b.Invalidate(false)
+}
+
+func (b *SwitchButton) Image(gc hamdeck.GraphicContext, redrawImages bool) image.Image {
+	if b.offImage == nil || b.onImage == nil || redrawImages {
+		b.redrawImages(gc)
+	}
+	switch {
+	case b.on:
+		return b.onImage
+	default:
+		return b.offImage
+	}
+}
+
+func (b *SwitchButton) redrawImages(gc hamdeck.GraphicContext) {
+	if b.enabled {
+		gc.SetForeground(hamdeck.White)
+	} else {
+		gc.SetForeground(hamdeck.DisabledGray)
+	}
+	b.offImage = gc.DrawSingleLineTextButton(b.label)
+	gc.SwapColors()
+	b.onImage = gc.DrawSingleLineTextButton(b.label)
+}
+
+func (b *SwitchButton) Pressed() {
+	if !(b.enabled) {
+		return
+	}
+	var payload string
+
+	switch b.mode {
+	case SwitchModeOn:
+		payload = b.onPayload
+	case SwitchModeOff:
+		payload = b.offPayload
+	case SwitchModeToggle:
+		if b.on {
+			payload = b.offPayload
+		} else {
+			payload = b.onPayload
+		}
+	default:
+		return
+	}
+
+	b.client.Publish(b.outputTopic, payload)
+}
+
+func (b *SwitchButton) Released() {
 	// ignore
 }

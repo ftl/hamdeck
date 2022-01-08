@@ -1,4 +1,6 @@
 /hamdeck
+/test_conf.json
+
 /cmd/pulse.go
 /cmd/hamlib.go
 
