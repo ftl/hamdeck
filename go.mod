@@ -1,6 +1,6 @@
 module github.com/ftl/hamdeck
 
-go 1.17
+go 1.18
 
 // replace github.com/ftl/tci => ../tci
 
@@ -13,7 +13,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/fogleman/gg v1.3.0
 	github.com/ftl/hamradio v0.0.0-20210620180211-c5cf51256994
-	github.com/ftl/rigproxy v0.0.0-20211222110853-35af91f708ae
+	github.com/ftl/rigproxy v0.1.0
 	github.com/ftl/tci v0.2.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/jfreymuth/pulse v0.1.0
