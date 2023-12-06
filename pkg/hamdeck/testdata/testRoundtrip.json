@@ -1,0 +1,9 @@
+{
+    "buttons": [
+        {
+            "type": "test.Button",
+            "index": 12,
+            "some_config": "some_value"
+        }
+    ]
+}
