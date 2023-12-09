@@ -1,206 +1,275 @@
 {
-	"buttons": [
-		{
-			"type": "hamlib.SwitchToBand",
-			"index": 0,
-			"band": "80m"
+	"start_page": "main",
+	"pages": {
+		"main": {
+			"buttons": [
+				{
+					"type": "hamdeck.Page",
+					"index": 0,
+					"page": "hamlib",
+					"label": "Hamlib"
+				},
+				{
+					"type": "hamdeck.Page",
+					"index": 1,
+					"page": "tci",
+					"label": "TCI"
+				},
+				{
+					"type": "hamdeck.Page",
+					"index": 2,
+					"page": "pulse",
+					"label": "Pulse"
+				},
+				{
+					"type": "hamdeck.Page",
+					"index": 3,
+					"page": "mqtt",
+					"label": "MQTT"
+				}
+			]
 		},
-		{
-			"type": "hamlib.SwitchToBand",
-			"index": 1,
-			"band": "40m"
+		"hamlib": {
+			"buttons": [
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 0,
+					"band": "80m"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 1,
+					"band": "40m"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 2,
+					"band": "30m"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 3,
+					"band": "20m"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 4,
+					"band": "17m"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 5,
+					"band": "15m"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 6,
+					"band": "12m"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 7,
+					"band": "10m"
+				},
+				{
+					"type": "hamlib.SetMode",
+					"index": 8,
+					"mode": "CW"
+				},
+				{
+					"type": "hamlib.SetMode",
+					"index": 9,
+					"mode": "PKTUSB",
+					"label": "Data"
+				},
+				{
+					"type": "hamlib.ToggleMode",
+					"index": 10,
+					"mode1": "LSB",
+					"mode2": "USB"
+				},
+				{
+					"type": "hamlib.Set",
+					"index": 11,
+					"label": "Band▾",
+					"command": "vfo_op",
+					"args": ["BAND_DOWN"]
+				},
+				{
+					"type": "hamlib.Set",
+					"index": 12,
+					"label": "Band▴",
+					"command": "vfo_op",
+					"args": ["BAND_UP"]
+				},
+				{
+					"type": "hamlib.SetPowerLevel",
+					"index": 13,
+					"label": "10W",
+					"value": 0.1
+				},
+				{
+					"type": "hamlib.SetPowerLevel",
+					"index": 14,
+					"label": "50W",
+					"value": 0.5
+				},
+				{
+					"type": "hamlib.SetPowerLevel",
+					"index": 15,
+					"label": "100W",
+					"value": 1.0
+				},
+				{
+					"type": "hamlib.SetVFO",
+					"index": 16,
+					"label": "VFO A",
+					"vfo": "VFOA"
+				},
+				{
+					"type": "hamlib.SetVFO",
+					"index": 17,
+					"label": "VFO B",
+					"vfo": "VFOB"
+				},
+				{
+					"type": "hamlib.Set",
+					"index": 18,
+					"label": "A=B",
+					"command": "vfo_op",
+					"args": ["CPY"]
+				},
+				{
+					"type": "hamlib.MOX",
+					"index": 20
+				},
+				{
+					"type": "hamdeck.Page",
+					"index": 31,
+					"page": "main",
+					"label": "Back"
+				}
+			]
 		},
-		{
-			"type": "hamlib.SwitchToBand",
-			"index": 2,
-			"band": "30m"
+		"tci": {
+			"buttons": [
+				{
+					"type": "tci.SetFilter",
+					"index": 0,
+					"label": "CW 100",
+					"icon": "filter_small",
+					"bottom_frequency": -50,
+					"top_frequency": 50,
+					"mode": "CW"
+				},
+				{
+					"type": "tci.SetFilter",
+					"index": 1,
+					"label": "CW 300",
+					"icon": "filter_medium",
+					"bottom_frequency": -150,
+					"top_frequency": 150,
+					"mode": "CW"
+				},
+				{
+					"type": "tci.SetFilter",
+					"index": 2,
+					"label": "DigU 500",
+					"icon": "filter_small_usb",
+					"bottom_frequency": 1250,
+					"top_frequency": 1750,
+					"mode": "PKTUSB"
+				},
+				{
+					"type": "tci.SetFilter",
+					"index": 3,
+					"label": "DigU 3k",
+					"icon": "filter_usb",
+					"bottom_frequency": 0,
+					"top_frequency": 3000,
+					"mode": "PKTUSB"
+				},
+				{
+					"type": "hamdeck.Page",
+					"index": 31,
+					"page": "main",
+					"label": "Back"
+				}
+			]
 		},
-		{
-			"type": "hamlib.SwitchToBand",
-			"index": 3,
-			"band": "20m"
+		"pulse": {
+			"buttons": [
+				{
+					"type": "pulse.ToggleMute",
+					"index": 0,
+					"sink": "my.sink",
+					"label": "Sink"
+				},
+				{
+					"type": "pulse.ToggleMute",
+					"index": 1,
+					"source": "my.source",
+					"label": "Source"
+				},
+				{
+					"type": "pulse.ToggleMute",
+					"index": 2,
+					"sinkInput": "Sink Input Media Name",
+					"label": "Source"
+				},
+				{
+					"type": "pulse.ToggleMute",
+					"index": 3,
+					"sourceOutput": "Source Output Media Name",
+					"label": "Source"
+				},
+				{
+					"type": "hamdeck.Page",
+					"index": 31,
+					"page": "main",
+					"label": "Back"
+				}
+			]
 		},
-		{
-			"type": "hamlib.SwitchToBand",
-			"index": 4,
-			"band": "17m"
-		},
-		{
-			"type": "hamlib.SwitchToBand",
-			"index": 5,
-			"band": "15m"
-		},
-		{
-			"type": "hamlib.SwitchToBand",
-			"index": 6,
-			"band": "12m"
-		},
-		{
-			"type": "hamlib.SwitchToBand",
-			"index": 7,
-			"band": "10m"
-		},
-		{
-			"type": "hamlib.SetMode",
-			"index": 8,
-			"mode": "CW"
-		},
-		{
-			"type": "hamlib.SetMode",
-			"index": 9,
-			"mode": "PKTUSB",
-			"label": "Data"
-		},
-		{
-			"type": "hamlib.ToggleMode",
-			"index": 10,
-			"mode1": "LSB",
-			"mode2": "USB"
-		},
-	    {
-	    	"type": "hamlib.Set",
-	    	"index": 11,
-	    	"label": "Band▾",
-	    	"command": "vfo_op",
-	    	"args": ["BAND_DOWN"]
-	    },
-	    {
-	    	"type": "hamlib.Set",
-	    	"index": 12,
-	    	"label": "Band▴",
-	    	"command": "vfo_op",
-	    	"args": ["BAND_UP"]
-	    },
-	    {
-	    	"type": "hamlib.SetPowerLevel",
-	    	"index": 13,
-			"label": "10W",
-			"value": 0.1
-	    },
-	    {
-	    	"type": "hamlib.SetPowerLevel",
-	    	"index": 14,
-			"label": "50W",
-			"value": 0.5
-	    },
-	    {
-	    	"type": "hamlib.SetPowerLevel",
-	    	"index": 15,
-			"label": "100W",
-			"value": 1.0
-	    },
-		{
-			"type": "hamlib.SetVFO",
-			"index": 16,
-			"label": "VFO A",
-			"vfo": "VFOA"
-		},
-		{
-			"type": "hamlib.SetVFO",
-			"index": 17,
-			"label": "VFO B",
-			"vfo": "VFOB"
-		},
-		{
-			"type": "hamlib.Set",
-			"index": 18,
-			"label": "A=B",
-			"command": "vfo_op",
-			"args": ["CPY"]
-		},
-		{
-			"type": "tci.SetFilter",
-			"index": 19,
-			"label": "CW 100",
-			"icon": "filter_small",
-			"bottom_frequency": -50,
-			"top_frequency": 50,
-			"mode": "CW"
-		},
-		{
-			"type": "tci.SetFilter",
-			"index": 20,
-			"label": "CW 300",
-			"icon": "filter_medium",
-			"bottom_frequency": -150,
-			"top_frequency": 150,
-			"mode": "CW"
-		},
-		{
-			"type": "tci.SetFilter",
-			"index": 21,
-			"label": "DigU 500",
-			"icon": "filter_small_usb",
-			"bottom_frequency": 1250,
-			"top_frequency": 1750,
-			"mode": "PKTUSB"
-		},
-		{
-			"type": "tci.SetFilter",
-			"index": 22,
-			"label": "DigU 3k",
-			"icon": "filter_usb",
-			"bottom_frequency": 0,
-			"top_frequency": 3000,
-			"mode": "PKTUSB"
-		},
-		{
-			"type": "pulse.ToggleMute",
-			"index": 24,
-			"sink": "my.sink",
-			"label": "Sink"
-		},
-		{
-			"type": "pulse.ToggleMute",
-			"index": 25,
-			"source": "my.source",
-			"label": "Source"
-		},
-		{
-			"type": "pulse.ToggleMute",
-			"index": 26,
-			"sinkInput": "Sink Input Media Name",
-			"label": "Source"
-		},
-		{
-			"type": "pulse.ToggleMute",
-			"index": 27,
-			"sourceOutput": "Source Output Media Name",
-			"label": "Source"
-		},
-		{
-			"type": "mqtt.Switch",
-			"index": 28,
-			"label": "Lights",
-            "inputTopic": "tasmota/smartplug1/stat/POWER",
-            "outputTopic": "tasmota/smartplug1/cmnd/POWER",
-            "onPayload": "ON",
-            "offPayload": "OFF",
-            "mode": "toggle"
-		},
-        {
-			"type": "mqtt.Switch",
-			"index": 29,
-			"label": "On",
-            "inputTopic": "tasmota/smartplug1/stat/POWER",
-            "outputTopic": "tasmota/smartplug1/cmnd/POWER",
-            "onPayload": "ON",
-            "offPayload": "OFF",
-            "mode": "ON"
-		},
-        {
-			"type": "mqtt.Switch",
-			"index": 20,
-			"label": "Off",
-            "inputTopic": "tasmota/smartplug1/stat/POWER",
-            "outputTopic": "tasmota/smartplug1/cmnd/POWER",
-            "onPayload": "ON",
-            "offPayload": "OFF",
-            "mode": "OFF"
-		},
-		{
-			"type": "hamlib.MOX",
-			"index": 31
+		"mqtt": {
+			"buttons": [
+				{
+					"type": "mqtt.Switch",
+					"index": 0,
+					"label": "Lights",
+					"inputTopic": "tasmota/smartplug1/stat/POWER",
+					"outputTopic": "tasmota/smartplug1/cmnd/POWER",
+					"onPayload": "ON",
+					"offPayload": "OFF",
+					"mode": "toggle"
+				},
+				{
+					"type": "mqtt.Switch",
+					"index": 1,
+					"label": "On",
+					"inputTopic": "tasmota/smartplug1/stat/POWER",
+					"outputTopic": "tasmota/smartplug1/cmnd/POWER",
+					"onPayload": "ON",
+					"offPayload": "OFF",
+					"mode": "ON"
+				},
+				{
+					"type": "mqtt.Switch",
+					"index": 2,
+					"label": "Off",
+					"inputTopic": "tasmota/smartplug1/stat/POWER",
+					"outputTopic": "tasmota/smartplug1/cmnd/POWER",
+					"onPayload": "ON",
+					"offPayload": "OFF",
+					"mode": "OFF"
+				},						
+				{
+					"type": "hamdeck.Page",
+					"index": 31,
+					"page": "main",
+					"label": "Back"
+				}
+			]
 		}
-	] 
+	}
 }

@@ -84,6 +84,8 @@ type ButtonFactory interface {
 	CreateButton(config map[string]interface{}) Button
 }
 
+const legacyPageID = ""
+
 type HamDeck struct {
 	device            Device
 	drawLock          *sync.Mutex
@@ -93,6 +95,13 @@ type HamDeck struct {
 	flashOn           bool
 	factories         []ButtonFactory
 	buttonsPerFactory []int
+
+	startPageID string
+	pages       map[string]Page
+}
+
+type Page struct {
+	buttons []Button
 }
 
 func New(device Device) *HamDeck {
@@ -102,6 +111,7 @@ func New(device Device) *HamDeck {
 		drawLock: new(sync.Mutex),
 		gc:       NewGraphicContext(device.Pixels()),
 		buttons:  make([]Button, buttonCount),
+		pages:    make(map[string]Page),
 	}
 	result.noButton = &noButton{image: result.gc.DrawNoButton()}
 	for i := range result.buttons {
@@ -136,11 +146,32 @@ func (d *HamDeck) Redraw(index int, redrawImages bool) {
 	d.device.SetImage(index, d.buttons[index].Image(d.gc, redrawImages))
 }
 
-func (d *HamDeck) Attach(index int, button Button) {
-	d.buttons[index] = button
+func (d *HamDeck) AttachPage(id string) error {
+	page, ok := d.pages[id]
+	if !ok {
+		return fmt.Errorf("no page defined with name %s", id)
+	}
 
-	ctx := &buttonContext{index: index, deck: d}
-	button.Attached(ctx)
+	for i, button := range page.buttons {
+		d.Attach(i, button)
+	}
+
+	return nil
+}
+
+func (d *HamDeck) Attach(index int, button Button) {
+	if d.buttons[index] != d.noButton {
+		d.buttons[index].Detached()
+	}
+
+	if button != nil {
+		d.buttons[index] = button
+		ctx := &buttonContext{index: index, deck: d}
+		button.Attached(ctx)
+	} else {
+		d.buttons[index] = d.noButton
+	}
+
 	d.Redraw(index, true)
 }
 

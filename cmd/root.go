@@ -94,6 +94,7 @@ func run(cmd *cobra.Command, args []string) {
 	device.SetBrightness(rootFlags.brightness)
 
 	deck := hamdeck.New(device)
+	deck.RegisterFactory(hamdeck.NewButtonFactory(deck))
 	deck.RegisterFactory(pulse.NewButtonFactory())
 	if rootFlags.hamlibAddress != "" {
 		deck.RegisterFactory(hamlib.NewButtonFactory(rootFlags.hamlibAddress))
