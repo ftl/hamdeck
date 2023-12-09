@@ -13,6 +13,8 @@ import (
 const (
 	ConfigDefaultFilename = "hamdeck.json"
 	ConfigMainKey         = "hamdeck"
+	ConfigStartPageID     = "start_page"
+	ConfigPages           = "pages"
 	ConfigButtons         = "buttons"
 	ConfigType            = "type"
 	ConfigIndex           = "index"
@@ -25,43 +27,106 @@ func (d *HamDeck) ReadConfig(r io.Reader) error {
 		return fmt.Errorf("cannot read the configuration: %w", err)
 	}
 
-	var rawData interface{}
+	var rawData any
 	err = json.Unmarshal(buffer.Bytes(), &rawData)
 	if err != nil {
 		return fmt.Errorf("cannot unmarshal the configuration: %w", err)
 	}
 
-	configuration, ok := rawData.(map[string]interface{})
+	configuration, ok := rawData.(map[string]any)
 	if !ok {
 		return fmt.Errorf("configuration is of wrong type: %T", rawData)
 	}
-
-	rawSubconfiguration, ok := configuration[ConfigMainKey]
-	if !ok {
-		return d.attachConfiguredButtons(configuration)
-	}
-
-	subconfiguration, ok := rawSubconfiguration.(map[string]interface{})
-	if !ok {
-		return d.attachConfiguredButtons(configuration)
-	}
-	return d.attachConfiguredButtons(subconfiguration)
-}
-
-func (d *HamDeck) attachConfiguredButtons(configuration map[string]interface{}) error {
-	rawButtons, ok := configuration[ConfigButtons]
-	if !ok {
-		return fmt.Errorf("configuration contains no 'buttons' key")
-	}
-
-	buttons, ok := rawButtons.([]interface{})
-	if !ok {
-		return fmt.Errorf("'buttons' is not a list of button objects")
-	}
+	effectiveConfiguration := findEffectiveConfiguration(configuration)
 
 	d.buttonsPerFactory = make([]int, len(d.factories))
-	for i, rawButtonConfig := range buttons {
-		buttonConfig, ok := rawButtonConfig.(map[string]interface{})
+	d.pages = make(map[string]Page)
+	d.startPageID, ok = effectiveConfiguration[ConfigStartPageID].(string)
+	if !ok {
+		d.startPageID = legacyPageID
+	}
+
+	pages, ok := effectiveConfiguration[ConfigPages].(map[string]any)
+	if ok {
+		err = d.loadPages(pages)
+	}
+	if err != nil {
+		return err
+	}
+
+	buttons, ok := effectiveConfiguration[ConfigButtons].([]any)
+	if ok {
+		err = d.loadLegacyPage(buttons)
+	}
+	if err != nil {
+		return err
+	}
+
+	return d.AttachPage(d.startPageID)
+}
+
+func findEffectiveConfiguration(configuration map[string]any) map[string]any {
+	rawSubconfiguration, ok := configuration[ConfigMainKey]
+	if !ok {
+		return configuration
+	}
+
+	subconfiguration, ok := rawSubconfiguration.(map[string]any)
+	if !ok {
+		return configuration
+	}
+	return subconfiguration
+}
+
+func (d *HamDeck) loadPages(configuration map[string]any) error {
+	for id, rawPage := range configuration {
+		pageConfiguration, ok := rawPage.(map[string]any)
+		if !ok {
+			return fmt.Errorf("%s is not a valid page", id)
+		}
+
+		page, err := d.loadPage(id, pageConfiguration)
+		if err != nil {
+			return err
+		}
+
+		d.pages[id] = page
+	}
+	return nil
+}
+
+func (d *HamDeck) loadPage(id string, configuration map[string]any) (Page, error) {
+	buttonsConfiguration, ok := configuration[ConfigButtons].([]any)
+	if !ok {
+		return Page{}, fmt.Errorf("page %s has no buttons defined", id)
+	}
+
+	buttons, err := d.loadButtons(buttonsConfiguration)
+	if err != nil {
+		return Page{}, err
+	}
+
+	return Page{
+		buttons: buttons,
+	}, nil
+}
+
+func (d *HamDeck) loadLegacyPage(configuration []any) error {
+	buttons, err := d.loadButtons(configuration)
+	if err != nil {
+		return err
+	}
+
+	d.pages[legacyPageID] = Page{
+		buttons: buttons,
+	}
+	return nil
+}
+
+func (d *HamDeck) loadButtons(configuration []any) ([]Button, error) {
+	result := make([]Button, len(d.buttons))
+	for i, rawButtonConfig := range configuration {
+		buttonConfig, ok := rawButtonConfig.(map[string]any)
 		if !ok {
 			log.Printf("buttons[%d] is not a button object", i)
 			continue
@@ -71,6 +136,9 @@ func (d *HamDeck) attachConfiguredButtons(configuration map[string]interface{}) 
 		if !ok {
 			log.Printf("buttons[%d] has no valid index", i)
 			continue
+		}
+		if buttonIndex <= 0 || buttonIndex >= len(d.buttons) {
+			log.Printf("%d is not a valid button index in [0, %d])", buttonIndex, len(d.buttons))
 		}
 
 		var button Button
@@ -86,10 +154,9 @@ func (d *HamDeck) attachConfiguredButtons(configuration map[string]interface{}) 
 			continue
 		}
 
-		d.Attach(buttonIndex, button)
+		result[buttonIndex] = button
 	}
-
-	return nil
+	return result, nil
 }
 
 func (d *HamDeck) CloseUnusedFactories() {
@@ -100,7 +167,7 @@ func (d *HamDeck) CloseUnusedFactories() {
 	}
 }
 
-func ToInt(raw interface{}) (int, bool) {
+func ToInt(raw any) (int, bool) {
 	if raw == nil {
 		return 0, false
 	}
@@ -120,7 +187,7 @@ func ToInt(raw interface{}) (int, bool) {
 	}
 }
 
-func ToFloat(raw interface{}) (float64, bool) {
+func ToFloat(raw any) (float64, bool) {
 	if raw == nil {
 		return 0, false
 	}
@@ -140,7 +207,7 @@ func ToFloat(raw interface{}) (float64, bool) {
 	}
 }
 
-func ToBool(raw interface{}) (bool, bool) {
+func ToBool(raw any) (bool, bool) {
 	if raw == nil {
 		return false, false
 	}
@@ -158,7 +225,7 @@ func ToBool(raw interface{}) (bool, bool) {
 	}
 }
 
-func ToString(raw interface{}) (string, bool) {
+func ToString(raw any) (string, bool) {
 	if raw == nil {
 		return "", false
 	}
@@ -174,11 +241,11 @@ func ToString(raw interface{}) (string, bool) {
 	}
 }
 
-func ToStringArray(raw interface{}) ([]string, bool) {
+func ToStringArray(raw any) ([]string, bool) {
 	if raw == nil {
 		return []string{}, false
 	}
-	rawValues, ok := raw.([]interface{})
+	rawValues, ok := raw.([]any)
 	if !ok {
 		return []string{}, false
 	}
