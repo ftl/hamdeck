@@ -1,6 +1,7 @@
 package hamdeck
 
 import (
+	"bytes"
 	"image"
 	"io"
 	"os"
@@ -13,24 +14,39 @@ import (
 )
 
 func TestHamDeckRoundtrip(t *testing.T) {
+	runWithConfigFile(t, "testRoundtrip", func(t *testing.T, deck *HamDeck, device *testDevice, _ chan struct{}) {
+		require.Equal(t, 32, len(deck.buttons))
+		button := deck.buttons[12].(*testButton)
+
+		assert.Equal(t, "some_value", button.config["some_config"])
+		assert.True(t, button.attached)
+		assert.False(t, button.detached)
+		assert.False(t, button.pressed)
+		assert.False(t, button.released)
+
+		device.Press(12)
+		device.WaitForLastKey()
+		assert.True(t, button.pressed)
+		assert.False(t, button.released)
+
+		device.Release(12)
+		device.WaitForLastKey()
+		assert.True(t, button.released)
+	})
+}
+
+/* Test Harness */
+
+func runWithConfigFile(t *testing.T, filename string, f func(*testing.T, *HamDeck, *testDevice, chan struct{})) {
 	device := newDefaultTestDevice()
 	deck := New(device)
 	deck.RegisterFactory(new(testButtonFactory))
 
-	reader, err := openTestConfig("testRoundtrip")
+	reader, err := openTestConfigFile(filename)
 	require.NoError(t, err)
 	defer reader.Close()
 	err = deck.ReadConfig(reader)
 	require.NoError(t, err)
-
-	require.Equal(t, 32, len(deck.buttons))
-	button := deck.buttons[12].(*testButton)
-
-	assert.Equal(t, "some_value", button.config["some_config"])
-	assert.True(t, button.attached)
-	assert.False(t, button.detached)
-	assert.False(t, button.pressed)
-	assert.False(t, button.released)
 
 	stopper := make(chan struct{})
 	wg := new(sync.WaitGroup)
@@ -40,23 +56,60 @@ func TestHamDeckRoundtrip(t *testing.T) {
 		wg.Done()
 	}()
 
-	device.Press(12)
-	device.WaitForLastKey()
-	assert.True(t, button.pressed)
-	assert.False(t, button.released)
+	f(t, deck, device, stopper)
 
-	device.Release(12)
-	device.WaitForLastKey()
-	assert.True(t, button.released)
-
-	close(stopper)
+	select {
+	case <-stopper:
+	default:
+		close(stopper)
+	}
 	wg.Wait()
 }
 
-/* Test Harness */
+func runWithConfigString(t *testing.T, config string, f func(*testing.T, *HamDeck, *testDevice, chan struct{})) {
+	device := newDefaultTestDevice()
+	deck := New(device)
+	deck.RegisterFactory(new(testButtonFactory))
 
-func openTestConfig(name string) (io.ReadCloser, error) {
-	return os.Open(filepath.Join("testdata", name+".json"))
+	reader, err := openTestConfigString(config)
+	require.NoError(t, err)
+	defer reader.Close()
+	err = deck.ReadConfig(reader)
+	require.NoError(t, err)
+
+	stopper := make(chan struct{})
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	go func() {
+		deck.Run(stopper)
+		wg.Done()
+	}()
+
+	f(t, deck, device, stopper)
+
+	select {
+	case <-stopper:
+	default:
+		close(stopper)
+	}
+	wg.Wait()
+}
+
+func openTestConfigFile(filename string) (io.ReadCloser, error) {
+	return os.Open(filepath.Join("testdata", filename+".json"))
+}
+
+func openTestConfigString(config string) (io.ReadCloser, error) {
+	buffer := bytes.NewBufferString(config)
+	return &readCloseWrapper{buffer}, nil
+}
+
+type readCloseWrapper struct {
+	io.Reader
+}
+
+func (w *readCloseWrapper) Close() error {
+	return nil
 }
 
 type testDevice struct {
