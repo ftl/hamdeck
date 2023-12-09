@@ -126,3 +126,43 @@ func TestAttachPage(t *testing.T) {
 		assert.Same(t, deck.noButton, deck.buttons[1])
 	})
 }
+
+func TestPageButton(t *testing.T) {
+	runWithConfigString(t, `{
+	"pages": {
+		"main": {
+			"buttons": [
+				{ "type": "hamdeck.Page", "index": 0, "page": "", "label": "Back" }
+			]
+		}
+	},
+	"buttons": [
+		{ "type": "hamdeck.Page", "index": 0, "page": "main", "label": "Main" }
+	]
+}`, func(t *testing.T, deck *HamDeck, device *testDevice, _ chan struct{}) {
+		assert.Equal(t, legacyPageID, deck.startPageID)
+		assert.Equal(t, 2, len(deck.pages))
+
+		mainPage := deck.pages["main"]
+		require.Equal(t, len(deck.buttons), len(mainPage.buttons))
+		mainButton, ok := mainPage.buttons[0].(*PageButton)
+		require.True(t, ok)
+		assert.Equal(t, "Back", mainButton.label)
+
+		legacyPage := deck.pages[legacyPageID]
+		require.Equal(t, len(deck.buttons), len(legacyPage.buttons))
+		legacyButton, ok := legacyPage.buttons[0].(*PageButton)
+		require.True(t, ok)
+		assert.Equal(t, "Main", legacyButton.label)
+
+		assert.Same(t, legacyButton, deck.buttons[0])
+
+		device.Press(0)
+		device.WaitForLastKey()
+		assert.Same(t, mainButton, deck.buttons[0])
+
+		device.Press(0)
+		device.WaitForLastKey()
+		assert.Same(t, legacyButton, deck.buttons[0])
+	})
+}

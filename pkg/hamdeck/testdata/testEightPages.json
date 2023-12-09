@@ -1,0 +1,54 @@
+{
+    "buttons": [
+        {"type": "hamdeck.Page", "index": 0, "page": "1", "label": "1"},
+        {"type": "hamdeck.Page", "index": 1, "page": "2", "label": "2"},
+        {"type": "hamdeck.Page", "index": 2, "page": "3", "label": "3"},
+        {"type": "hamdeck.Page", "index": 3, "page": "4", "label": "4"},
+        {"type": "hamdeck.Page", "index": 4, "page": "5", "label": "5"},
+        {"type": "hamdeck.Page", "index": 5, "page": "6", "label": "6"},
+        {"type": "hamdeck.Page", "index": 6, "page": "7", "label": "7"},
+        {"type": "hamdeck.Page", "index": 7, "page": "8", "label": "8"}
+    ],
+    "pages": {
+        "1": {
+            "buttons": [
+                {"type": "hamdeck.Page", "index": 0, "page": "", "label": "Back"}
+            ]
+        },
+        "2": {
+            "buttons": [
+                {"type": "hamdeck.Page", "index": 1, "page": "", "label": "Back"}
+            ]
+        },
+        "3": {
+            "buttons": [
+                {"type": "hamdeck.Page", "index": 2, "page": "", "label": "Back"}
+            ]
+        },
+        "4": {
+            "buttons": [
+                {"type": "hamdeck.Page", "index": 3, "page": "", "label": "Back"}
+            ]
+        },
+        "5": {
+            "buttons": [
+                {"type": "hamdeck.Page", "index": 4, "page": "", "label": "Back"}
+            ]
+        },
+        "6": {
+            "buttons": [
+                {"type": "hamdeck.Page", "index": 5, "page": "", "label": "Back"}
+            ]
+        },
+        "7": {
+            "buttons": [
+                {"type": "hamdeck.Page", "index": 6, "page": "", "label": "Back"}
+            ]
+        },
+        "8": {
+            "buttons": [
+                {"type": "hamdeck.Page", "index": 7, "page": "", "label": "Back"}
+            ]
+        }
+    }
+}

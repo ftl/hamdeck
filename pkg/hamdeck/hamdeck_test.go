@@ -41,6 +41,7 @@ func runWithConfigFile(t *testing.T, filename string, f func(*testing.T, *HamDec
 	device := newDefaultTestDevice()
 	deck := New(device)
 	deck.RegisterFactory(new(testButtonFactory))
+	deck.RegisterFactory(NewButtonFactory(deck))
 
 	reader, err := openTestConfigFile(filename)
 	require.NoError(t, err)
@@ -70,6 +71,7 @@ func runWithConfigString(t *testing.T, config string, f func(*testing.T, *HamDec
 	device := newDefaultTestDevice()
 	deck := New(device)
 	deck.RegisterFactory(new(testButtonFactory))
+	deck.RegisterFactory(NewButtonFactory(deck))
 
 	reader, err := openTestConfigString(config)
 	require.NoError(t, err)

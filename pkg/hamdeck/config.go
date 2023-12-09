@@ -137,7 +137,7 @@ func (d *HamDeck) loadButtons(configuration []any) ([]Button, error) {
 			log.Printf("buttons[%d] has no valid index", i)
 			continue
 		}
-		if buttonIndex <= 0 || buttonIndex >= len(d.buttons) {
+		if buttonIndex < 0 || buttonIndex >= len(d.buttons) {
 			log.Printf("%d is not a valid button index in [0, %d])", buttonIndex, len(d.buttons))
 		}
 
