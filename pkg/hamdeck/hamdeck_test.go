@@ -100,16 +100,7 @@ func openTestConfigFile(filename string) (io.ReadCloser, error) {
 }
 
 func openTestConfigString(config string) (io.ReadCloser, error) {
-	buffer := bytes.NewBufferString(config)
-	return &readCloseWrapper{buffer}, nil
-}
-
-type readCloseWrapper struct {
-	io.Reader
-}
-
-func (w *readCloseWrapper) Close() error {
-	return nil
+	return io.NopCloser(bytes.NewBufferString(config)), nil
 }
 
 type testDevice struct {
