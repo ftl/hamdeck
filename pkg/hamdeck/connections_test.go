@@ -21,15 +21,15 @@ func TestReadConfig_Connections(t *testing.T) {
 }`, func(t *testing.T, deck *HamDeck, device *testDevice, _ chan struct{}) {
 		assert.Equal(t, 2, len(deck.connections))
 
-		configA, ok := deck.GetConnection("testsdrA")
+		configA, ok := deck.GetConnection("testsdrA", "test")
 		assert.True(t, ok)
 		assert.Equal(t, "some_value", configA["some_config"])
 
-		configB, ok := deck.GetConnection("testsdrB")
+		configB, ok := deck.GetConnection("testsdrB", "test")
 		assert.True(t, ok)
 		assert.Equal(t, "some_other_value", configB["some_config"])
 
-		_, ok = deck.GetConnection("undefined")
+		_, ok = deck.GetConnection("testsdrA", "undefined")
 		assert.False(t, ok)
 	})
 }

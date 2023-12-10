@@ -41,7 +41,7 @@ func (d *HamDeck) ReadConfig(r io.Reader) error {
 	effectiveConfiguration := findEffectiveConfiguration(configuration)
 
 	d.buttonsPerFactory = make([]int, len(d.factories))
-	d.connections = make(map[string]ConnectionConfig)
+	d.connections = make(map[connectionKey]ConnectionConfig)
 	d.pages = make(map[string]Page)
 
 	connections, ok := (effectiveConfiguration[ConfigConnections]).(map[string]any)
@@ -91,13 +91,18 @@ func findEffectiveConfiguration(configuration map[string]any) map[string]any {
 }
 
 func (d *HamDeck) loadConnections(configuration map[string]any) error {
-	for id, config := range configuration {
+	for name, config := range configuration {
 		connection, ok := config.(map[string]any)
 		if !ok {
-			log.Printf("%s is not a valid connection configuration", id)
+			log.Printf("%s is not a valid connection configuration", name)
 			continue
 		}
-		d.connections[id] = ConnectionConfig(connection)
+		connectionType, ok := ToString(connection[ConfigType])
+		if !ok {
+			log.Printf("connection %s needs a type", name)
+			continue
+		}
+		d.connections[connectionKey{name, connectionType}] = ConnectionConfig(connection)
 	}
 	return nil
 }

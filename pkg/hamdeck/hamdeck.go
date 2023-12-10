@@ -84,6 +84,11 @@ type ButtonFactory interface {
 	CreateButton(config map[string]interface{}) Button
 }
 
+type connectionKey struct {
+	name           string
+	connectionType string
+}
+
 type ConnectionConfig map[string]any
 
 const legacyPageID = ""
@@ -101,7 +106,7 @@ type HamDeck struct {
 	startPageID string
 	pages       map[string]Page
 
-	connections map[string]ConnectionConfig
+	connections map[connectionKey]ConnectionConfig
 }
 
 type Page struct {
@@ -132,8 +137,8 @@ func (d *HamDeck) RegisterFactory(factory ButtonFactory) {
 	d.factories = append(d.factories, factory)
 }
 
-func (d *HamDeck) GetConnection(name string) (ConnectionConfig, bool) {
-	connection, found := d.connections[name]
+func (d *HamDeck) GetConnection(name string, connectionType string) (ConnectionConfig, bool) {
+	connection, found := d.connections[connectionKey{name, connectionType}]
 	return connection, found
 }
 
