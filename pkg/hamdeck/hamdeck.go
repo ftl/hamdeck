@@ -89,8 +89,6 @@ type connectionKey struct {
 	connectionType string
 }
 
-type ConnectionConfig map[string]any
-
 const legacyPageID = ""
 
 type HamDeck struct {
@@ -313,4 +311,49 @@ func (h *LongpressHandler) Released() {
 		return
 	}
 	h.timer.Stop()
+}
+
+type ConnectionConfig map[string]any
+
+type ConnectionConfigProvider interface {
+	GetConnection(string, string) (ConnectionConfig, bool)
+}
+
+type ConnectionFactory[T any] func(ConnectionConfig) (T, error)
+
+type ConnectionManager[T any] struct {
+	connectionType string
+	provider       ConnectionConfigProvider
+	factory        ConnectionFactory[T]
+	connections    map[string]T
+}
+
+func NewConnectionManager[T any](connectionType string, provider ConnectionConfigProvider, factory ConnectionFactory[T]) *ConnectionManager[T] {
+	return &ConnectionManager[T]{
+		connectionType: connectionType,
+		provider:       provider,
+		factory:        factory,
+		connections:    make(map[string]T),
+	}
+}
+
+func (m *ConnectionManager[T]) Get(name string) (T, error) {
+	connection, ok := m.connections[name]
+	if ok {
+		return connection, nil
+	}
+
+	config, ok := m.provider.GetConnection(name, m.connectionType)
+	if !ok {
+		return connection, fmt.Errorf("no %s connection defined with name %s", m.connectionType, name)
+	}
+
+	connection, err := m.factory(config)
+	if err != nil {
+		return connection, err
+	}
+
+	m.connections[name] = connection
+
+	return connection, nil
 }

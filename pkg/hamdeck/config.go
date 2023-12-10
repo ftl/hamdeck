@@ -13,12 +13,13 @@ import (
 const (
 	ConfigDefaultFilename = "hamdeck.json"
 	ConfigMainKey         = "hamdeck"
+	ConfigConnections     = "connections"
 	ConfigStartPageID     = "start_page"
 	ConfigPages           = "pages"
 	ConfigButtons         = "buttons"
 	ConfigType            = "type"
 	ConfigIndex           = "index"
-	ConfigConnections     = "connections"
+	ConfigConnection      = "connection"
 )
 
 func (d *HamDeck) ReadConfig(r io.Reader) error {
