@@ -68,7 +68,7 @@ func (p *testConnectionProvider) GetConnection(name string, connectionType strin
 	return p.config, true
 }
 
-func (p *testConnectionProvider) CreateConnection(config ConnectionConfig) (*testConnection, error) {
+func (p *testConnectionProvider) CreateConnection(_ string, config ConnectionConfig) (*testConnection, error) {
 	return &testConnection{
 		config: config,
 	}, nil

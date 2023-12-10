@@ -313,19 +313,23 @@ func (h *LongpressHandler) Released() {
 	h.timer.Stop()
 }
 
+const LegacyConnectionName = ""
+
 type ConnectionConfig map[string]any
 
 type ConnectionConfigProvider interface {
 	GetConnection(string, string) (ConnectionConfig, bool)
 }
 
-type ConnectionFactory[T any] func(ConnectionConfig) (T, error)
+type ConnectionFactory[T any] func(string, ConnectionConfig) (T, error)
 
 type ConnectionManager[T any] struct {
-	connectionType string
-	provider       ConnectionConfigProvider
-	factory        ConnectionFactory[T]
-	connections    map[string]T
+	connectionType   string
+	provider         ConnectionConfigProvider
+	factory          ConnectionFactory[T]
+	connections      map[string]T
+	hasLegacy        bool
+	legacyConnection T
 }
 
 func NewConnectionManager[T any](connectionType string, provider ConnectionConfigProvider, factory ConnectionFactory[T]) *ConnectionManager[T] {
@@ -337,7 +341,20 @@ func NewConnectionManager[T any](connectionType string, provider ConnectionConfi
 	}
 }
 
+func (m *ConnectionManager[T]) SetLegacy(legacyConnection T) {
+	m.hasLegacy = true
+	m.legacyConnection = legacyConnection
+}
+
 func (m *ConnectionManager[T]) Get(name string) (T, error) {
+	var connection T
+	if name == LegacyConnectionName {
+		if !m.hasLegacy {
+			return connection, fmt.Errorf("no legacy %s connection defined", m.connectionType)
+		}
+		return m.legacyConnection, nil
+	}
+
 	connection, ok := m.connections[name]
 	if ok {
 		return connection, nil
@@ -348,7 +365,7 @@ func (m *ConnectionManager[T]) Get(name string) (T, error) {
 		return connection, fmt.Errorf("no %s connection defined with name %s", m.connectionType, name)
 	}
 
-	connection, err := m.factory(config)
+	connection, err := m.factory(name, config)
 	if err != nil {
 		return connection, err
 	}
@@ -356,4 +373,13 @@ func (m *ConnectionManager[T]) Get(name string) (T, error) {
 	m.connections[name] = connection
 
 	return connection, nil
+}
+
+func (m *ConnectionManager[T]) ForEach(f func(T)) {
+	for _, connection := range m.connections {
+		f(connection)
+	}
+	if m.hasLegacy {
+		f(m.legacyConnection)
+	}
 }

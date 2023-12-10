@@ -1,6 +1,7 @@
 package hamlib
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/ftl/rigproxy/pkg/client"
@@ -9,6 +10,7 @@ import (
 )
 
 const (
+	ConfigAddress   = "address"
 	ConfigCommand   = "command"
 	ConfigArgs      = "args"
 	ConfigMode      = "mode"
@@ -24,6 +26,7 @@ const (
 )
 
 const (
+	ConnectionType          = "hamlib"
 	SetModeButtonType       = "hamlib.SetMode"
 	ToggleModeButtonType    = "hamlib.ToggleMode"
 	SetButtonType           = "hamlib.Set"
@@ -33,21 +36,39 @@ const (
 	SetVFOButtonType        = "hamlib.SetVFO"
 )
 
-func NewButtonFactory(address string) *Factory {
-	client := NewClient(address)
-	client.KeepOpen()
+func NewButtonFactory(provider hamdeck.ConnectionConfigProvider, legacyAddress string) *Factory {
+	result := &Factory{}
+	result.connections = hamdeck.NewConnectionManager(ConnectionType, provider, result.createHamlibClient)
 
-	return &Factory{
-		client: client,
+	if legacyAddress != "" {
+		client := NewClient(legacyAddress)
+		client.KeepOpen()
+		result.connections.SetLegacy(client)
 	}
+
+	return result
 }
 
 type Factory struct {
-	client *HamlibClient
+	connections *hamdeck.ConnectionManager[*HamlibClient]
+}
+
+func (f *Factory) createHamlibClient(name string, config hamdeck.ConnectionConfig) (*HamlibClient, error) {
+	address, ok := hamdeck.ToString(config[ConfigAddress])
+	if !ok {
+		return nil, fmt.Errorf("no address defined for hamlib connection %s", name)
+	}
+
+	client := NewClient(address)
+	client.KeepOpen()
+
+	return client, nil
 }
 
 func (f *Factory) Close() {
-	f.client.Close()
+	f.connections.ForEach(func(client *HamlibClient) {
+		client.Close()
+	})
 }
 
 func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
@@ -79,7 +100,14 @@ func (f *Factory) createSetModeButton(config map[string]interface{}) hamdeck.But
 		return nil
 	}
 
-	return NewSetModeButton(f.client, client.Mode(mode), label)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	hamlibClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create hamlib.SetMode button: %v", err)
+		return nil
+	}
+
+	return NewSetModeButton(hamlibClient, client.Mode(mode), label)
 }
 
 func (f *Factory) createToggleModeButton(config map[string]interface{}) hamdeck.Button {
@@ -92,7 +120,14 @@ func (f *Factory) createToggleModeButton(config map[string]interface{}) hamdeck.
 		return nil
 	}
 
-	return NewToggleModeButton(f.client, client.Mode(mode1), label1, client.Mode(mode2), label2)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	hamlibClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create hamlib.ToggleMode button: %v", err)
+		return nil
+	}
+
+	return NewToggleModeButton(hamlibClient, client.Mode(mode1), label1, client.Mode(mode2), label2)
 }
 
 func (f *Factory) createSetButton(config map[string]interface{}) hamdeck.Button {
@@ -104,7 +139,14 @@ func (f *Factory) createSetButton(config map[string]interface{}) hamdeck.Button 
 		return nil
 	}
 
-	return NewSetButton(f.client, label, command, args...)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	hamlibClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create hamlib.Set button: %v", err)
+		return nil
+	}
+
+	return NewSetButton(hamlibClient, label, command, args...)
 }
 
 func (f *Factory) createSwitchToBandButton(config map[string]interface{}) hamdeck.Button {
@@ -116,7 +158,14 @@ func (f *Factory) createSwitchToBandButton(config map[string]interface{}) hamdec
 		return nil
 	}
 
-	return NewSwitchToBandButton(f.client, label, band, useUpDown)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	hamlibClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create hamlib.SwitchToBand button: %v", err)
+		return nil
+	}
+
+	return NewSwitchToBandButton(hamlibClient, label, band, useUpDown)
 }
 
 func (f *Factory) createSetPowerLevelButton(config map[string]interface{}) hamdeck.Button {
@@ -127,13 +176,27 @@ func (f *Factory) createSetPowerLevelButton(config map[string]interface{}) hamde
 		return nil
 	}
 
-	return NewSetPowerLevelButton(f.client, label, value)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	hamlibClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create hamlib.SetPowerLevel button: %v", err)
+		return nil
+	}
+
+	return NewSetPowerLevelButton(hamlibClient, label, value)
 }
 
 func (f *Factory) createMOXButton(config map[string]interface{}) hamdeck.Button {
 	label, _ := hamdeck.ToString(config[ConfigLabel])
 
-	return NewMOXButton(f.client, label)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	hamlibClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create hamlib.MOX button: %v", err)
+		return nil
+	}
+
+	return NewMOXButton(hamlibClient, label)
 }
 
 func (f *Factory) createSetVFOButton(config map[string]interface{}) hamdeck.Button {
@@ -144,5 +207,12 @@ func (f *Factory) createSetVFOButton(config map[string]interface{}) hamdeck.Butt
 		return nil
 	}
 
-	return NewSetVFOButton(f.client, label, client.VFO(vfo))
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	hamlibClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create hamlib.SetVFO button: %v", err)
+		return nil
+	}
+
+	return NewSetVFOButton(hamlibClient, label, client.VFO(vfo))
 }
