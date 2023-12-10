@@ -34,114 +34,182 @@
 				{
 					"type": "hamlib.SwitchToBand",
 					"index": 0,
-					"band": "80m"
+					"band": "80m",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SwitchToBand",
 					"index": 1,
-					"band": "40m"
+					"band": "40m",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SwitchToBand",
 					"index": 2,
-					"band": "30m"
+					"band": "30m",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SwitchToBand",
 					"index": 3,
-					"band": "20m"
+					"band": "20m",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SwitchToBand",
 					"index": 4,
-					"band": "17m"
+					"band": "17m",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SwitchToBand",
 					"index": 5,
-					"band": "15m"
+					"band": "15m",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SwitchToBand",
 					"index": 6,
-					"band": "12m"
+					"band": "12m",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SwitchToBand",
 					"index": 7,
-					"band": "10m"
+					"band": "10m",
+					"connection": "hamlib1"
 				},
 				{
-					"type": "hamlib.SetMode",
+					"type": "hamlib.SwitchToBand",
 					"index": 8,
-					"mode": "CW"
+					"band": "80m",
+					"connection": "hamlib2"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 9,
+					"band": "40m",
+					"connection": "hamlib2"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 10,
+					"band": "30m",
+					"connection": "hamlib2"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 11,
+					"band": "20m",
+					"connection": "hamlib2"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 12,
+					"band": "17m",
+					"connection": "hamlib2"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 13,
+					"band": "15m",
+					"connection": "hamlib2"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 14,
+					"band": "12m",
+					"connection": "hamlib2"
+				},
+				{
+					"type": "hamlib.SwitchToBand",
+					"index": 15,
+					"band": "10m",
+					"connection": "hamlib2"
 				},
 				{
 					"type": "hamlib.SetMode",
-					"index": 9,
+					"index": 16,
+					"mode": "CW",
+					"connection": "hamlib1"
+				},
+				{
+					"type": "hamlib.SetMode",
+					"index": 17,
 					"mode": "PKTUSB",
-					"label": "Data"
+					"label": "Data",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.ToggleMode",
-					"index": 10,
+					"index": 18,
 					"mode1": "LSB",
-					"mode2": "USB"
+					"mode2": "USB",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.Set",
-					"index": 11,
+					"index": 19,
 					"label": "Band▾",
 					"command": "vfo_op",
-					"args": ["BAND_DOWN"]
+					"args": ["BAND_DOWN"],
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.Set",
-					"index": 12,
+					"index": 20,
 					"label": "Band▴",
 					"command": "vfo_op",
-					"args": ["BAND_UP"]
+					"args": ["BAND_UP"],
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SetPowerLevel",
-					"index": 13,
+					"index": 21,
 					"label": "10W",
-					"value": 0.1
+					"value": 0.1,
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SetPowerLevel",
-					"index": 14,
+					"index": 22,
 					"label": "50W",
-					"value": 0.5
+					"value": 0.5,
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SetPowerLevel",
-					"index": 15,
+					"index": 23,
 					"label": "100W",
-					"value": 1.0
+					"value": 1.0,
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SetVFO",
-					"index": 16,
+					"index": 24,
 					"label": "VFO A",
-					"vfo": "VFOA"
+					"vfo": "VFOA",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.SetVFO",
-					"index": 17,
+					"index": 25,
 					"label": "VFO B",
-					"vfo": "VFOB"
+					"vfo": "VFOB",
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.Set",
-					"index": 18,
+					"index": 26,
 					"label": "A=B",
 					"command": "vfo_op",
-					"args": ["CPY"]
+					"args": ["CPY"],
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamlib.MOX",
-					"index": 20
+					"index": 27,
+					"connection": "hamlib1"
 				},
 				{
 					"type": "hamdeck.Page",
@@ -270,6 +338,16 @@
 					"label": "Back"
 				}
 			]
+		}
+	},
+	"connections": {
+		"hamlib1": {
+			"type": "hamlib",
+			"address": "localhost:4533"
+		},
+        "hamlib2": {
+			"type": "hamlib",
+			"address": "localhost:4534"
 		}
 	}
 }
