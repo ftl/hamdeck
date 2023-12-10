@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -8,6 +9,9 @@ import (
 )
 
 const (
+	ConfigAddress     = "address"
+	ConfigUsername    = "username"
+	ConfigPassword    = "password"
 	ConfigLabel       = "label"
 	ConfigPath        = "path"
 	ConfigInputTopic  = "inputTopic"
@@ -18,24 +22,43 @@ const (
 )
 
 const (
+	ConnectionType   = "mqtt"
 	TuneButtonType   = "mqtt.AT100Tune"
 	SwitchButtonType = "mqtt.Switch"
 )
 
-func NewButtonFactory(address string, username string, password string) *Factory {
-	client := NewClient(address, username, password)
+func NewButtonFactory(provider hamdeck.ConnectionConfigProvider, legacyAddress string, username string, password string) *Factory {
+	result := &Factory{}
+	result.connections = hamdeck.NewConnectionManager(ConnectionType, provider, result.createMQTTClient)
 
-	return &Factory{
-		client: client,
+	if legacyAddress != "" {
+		result.connections.SetLegacy(NewClient(legacyAddress, username, password))
 	}
+
+	return result
 }
 
 type Factory struct {
-	client *Client
+	connections *hamdeck.ConnectionManager[*Client]
+}
+
+func (f *Factory) createMQTTClient(name string, config hamdeck.ConnectionConfig) (*Client, error) {
+	address, ok := hamdeck.ToString(config[ConfigAddress])
+	if !ok {
+		return nil, fmt.Errorf("no address defined for mqtt connection %s", name)
+	}
+	username, _ := hamdeck.ToString(config[ConfigUsername])
+	password, _ := hamdeck.ToString(config[ConfigPassword])
+
+	client := NewClient(address, username, password)
+
+	return client, nil
 }
 
 func (f *Factory) Close() {
-	f.client.Disconnect()
+	f.connections.ForEach(func(client *Client) {
+		client.Disconnect()
+	})
 }
 
 func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
@@ -58,7 +81,14 @@ func (f *Factory) createTuneButton(config map[string]interface{}) hamdeck.Button
 		return nil
 	}
 
-	return NewTuneButton(f.client, label, path)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	mqttClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create mqtt.ATU100Tune button: %v", err)
+		return nil
+	}
+
+	return NewTuneButton(mqttClient, label, path)
 }
 
 func (f *Factory) createSwitchButton(config map[string]interface{}) hamdeck.Button {
@@ -74,5 +104,12 @@ func (f *Factory) createSwitchButton(config map[string]interface{}) hamdeck.Butt
 		return nil
 	}
 
-	return NewSwitchButton(f.client, label, inputTopic, outputTopic, onPayload, offPayload, SwitchMode(strings.TrimSpace(strings.ToUpper(mode))))
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	mqttClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create mqtt.Switch button: %v", err)
+		return nil
+	}
+
+	return NewSwitchButton(mqttClient, label, inputTopic, outputTopic, onPayload, offPayload, SwitchMode(strings.TrimSpace(strings.ToUpper(mode))))
 }
