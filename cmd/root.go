@@ -97,9 +97,7 @@ func run(cmd *cobra.Command, args []string) {
 	deck.RegisterFactory(hamdeck.NewButtonFactory(deck))
 	deck.RegisterFactory(pulse.NewButtonFactory())
 	deck.RegisterFactory(hamlib.NewButtonFactory(deck, rootFlags.hamlibAddress))
-	if rootFlags.tciAddress != "" {
-		deck.RegisterFactory(tci.NewButtonFactory(rootFlags.tciAddress))
-	}
+	deck.RegisterFactory(tci.NewButtonFactory(deck, rootFlags.tciAddress))
 	if rootFlags.mqttAddress != "" {
 		deck.RegisterFactory(mqtt.NewButtonFactory(rootFlags.mqttAddress, rootFlags.mqttUsername, rootFlags.mqttPassword))
 	}
