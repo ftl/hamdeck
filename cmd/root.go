@@ -96,15 +96,9 @@ func run(cmd *cobra.Command, args []string) {
 	deck := hamdeck.New(device)
 	deck.RegisterFactory(hamdeck.NewButtonFactory(deck))
 	deck.RegisterFactory(pulse.NewButtonFactory())
-	if rootFlags.hamlibAddress != "" {
-		deck.RegisterFactory(hamlib.NewButtonFactory(rootFlags.hamlibAddress))
-	}
-	if rootFlags.tciAddress != "" {
-		deck.RegisterFactory(tci.NewButtonFactory(rootFlags.tciAddress))
-	}
-	if rootFlags.mqttAddress != "" {
-		deck.RegisterFactory(mqtt.NewButtonFactory(rootFlags.mqttAddress, rootFlags.mqttUsername, rootFlags.mqttPassword))
-	}
+	deck.RegisterFactory(hamlib.NewButtonFactory(deck, rootFlags.hamlibAddress))
+	deck.RegisterFactory(tci.NewButtonFactory(deck, rootFlags.tciAddress))
+	deck.RegisterFactory(mqtt.NewButtonFactory(deck, rootFlags.mqttAddress, rootFlags.mqttUsername, rootFlags.mqttPassword))
 
 	err = configureHamDeck(deck, rootFlags.configFile)
 	if err != nil {

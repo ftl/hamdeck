@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	ConfigAddress         = "address"
 	ConfigCommand         = "command"
 	ConfigArgs            = "args"
 	ConfigMode            = "mode"
@@ -30,6 +31,7 @@ const (
 )
 
 const (
+	ConnectionType            = "tci"
 	SetModeButtonType         = "tci.SetMode"
 	ToggleModeButtonType      = "tci.ToggleMode"
 	SetFilterButtonType       = "tci.SetFilter"
@@ -42,28 +44,46 @@ const (
 	SwitchToBandButtonType    = "tci.SwitchToBand"
 )
 
-func NewButtonFactory(address string) *Factory {
-	host, err := parseTCPAddr(address)
-	if err != nil {
-		return &Factory{}
+func NewButtonFactory(provider hamdeck.ConnectionConfigProvider, legacyAddress string) *Factory {
+	result := &Factory{}
+	result.connections = hamdeck.NewConnectionManager(ConnectionType, provider, result.createTCIClient)
+
+	if legacyAddress != "" {
+		host, err := parseTCPAddr(legacyAddress)
+		if err == nil {
+			result.connections.SetLegacy(NewClient(host))
+		}
 	}
 
-	return &Factory{client: NewClient(host)}
+	return result
 }
 
 type Factory struct {
-	client *Client
+	connections *hamdeck.ConnectionManager[*Client]
+}
+
+func (f *Factory) createTCIClient(name string, config hamdeck.ConnectionConfig) (*Client, error) {
+	address, ok := hamdeck.ToString(config[ConfigAddress])
+	if !ok {
+		return nil, fmt.Errorf("no address defined for tci connection %s", name)
+	}
+
+	host, err := parseTCPAddr(address)
+	if err != nil {
+		return nil, err
+	}
+	client := NewClient(host)
+
+	return client, nil
 }
 
 func (f *Factory) Close() {
-	f.client.Disconnect()
+	f.connections.ForEach(func(client *Client) {
+		client.Disconnect()
+	})
 }
 
 func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
-	if f.client == nil {
-		return nil
-	}
-
 	switch config[hamdeck.ConfigType] {
 	case SetModeButtonType:
 		return f.createSetModeButton(config)
@@ -101,7 +121,14 @@ func (f *Factory) createSetModeButton(config map[string]interface{}) hamdeck.But
 		return nil
 	}
 
-	return NewSetModeButton(f.client, client.Mode(mode), label)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.SetMode button: %v", err)
+		return nil
+	}
+
+	return NewSetModeButton(tciClient, client.Mode(mode), label)
 }
 
 func (f *Factory) createToggleModeButton(config map[string]interface{}) hamdeck.Button {
@@ -118,7 +145,14 @@ func (f *Factory) createToggleModeButton(config map[string]interface{}) hamdeck.
 		return nil
 	}
 
-	return NewToggleModeButton(f.client, client.Mode(strings.ToLower(mode1)), label1, client.Mode(strings.ToLower(mode2)), label2)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.ToggleMode button: %v", err)
+		return nil
+	}
+
+	return NewToggleModeButton(tciClient, client.Mode(strings.ToLower(mode1)), label1, client.Mode(strings.ToLower(mode2)), label2)
 }
 
 func (f *Factory) createSetFilterButton(config map[string]interface{}) hamdeck.Button {
@@ -143,25 +177,54 @@ func (f *Factory) createSetFilterButton(config map[string]interface{}) hamdeck.B
 	if !haveIcon {
 		icon = "filter"
 	}
-	return NewSetFilterButton(f.client, bottomFrequency, topFrequency, client.Mode(mode), label, icon)
+
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.SetFilter button: %v", err)
+		return nil
+	}
+
+	return NewSetFilterButton(tciClient, bottomFrequency, topFrequency, client.Mode(mode), label, icon)
 }
 
 func (f *Factory) createMOXButton(config map[string]interface{}) hamdeck.Button {
 	label, _ := hamdeck.ToString(config[ConfigLabel])
 
-	return NewMOXButton(f.client, label)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.MOX button: %v", err)
+		return nil
+	}
+
+	return NewMOXButton(tciClient, label)
 }
 
 func (f *Factory) createTuneButton(config map[string]interface{}) hamdeck.Button {
 	label, _ := hamdeck.ToString(config[ConfigLabel])
 
-	return NewTuneButton(f.client, label)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.Tune button: %v", err)
+		return nil
+	}
+
+	return NewTuneButton(tciClient, label)
 }
 
 func (f *Factory) createMuteButton(config map[string]interface{}) hamdeck.Button {
 	label, _ := hamdeck.ToString(config[ConfigLabel])
 
-	return NewMuteButton(f.client, label)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.Mute button: %v", err)
+		return nil
+	}
+
+	return NewMuteButton(tciClient, label)
 }
 
 func (f *Factory) createSetDriveButton(config map[string]interface{}) hamdeck.Button {
@@ -172,7 +235,14 @@ func (f *Factory) createSetDriveButton(config map[string]interface{}) hamdeck.Bu
 		return nil
 	}
 
-	return NewSetDriveButton(f.client, label, value)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.SetDrive button: %v", err)
+		return nil
+	}
+
+	return NewSetDriveButton(tciClient, label, value)
 }
 
 func (f *Factory) createIncrementDriveButton(config map[string]interface{}) hamdeck.Button {
@@ -183,7 +253,14 @@ func (f *Factory) createIncrementDriveButton(config map[string]interface{}) hamd
 		return nil
 	}
 
-	return NewIncrementDriveButton(f.client, label, increment)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.IncrementDrive button: %v", err)
+		return nil
+	}
+
+	return NewIncrementDriveButton(tciClient, label, increment)
 }
 
 func (f *Factory) createIncrementVolumeButton(config map[string]interface{}) hamdeck.Button {
@@ -194,7 +271,14 @@ func (f *Factory) createIncrementVolumeButton(config map[string]interface{}) ham
 		return nil
 	}
 
-	return NewIncrementVolumeButton(f.client, label, increment)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.IncrementVolume button: %v", err)
+		return nil
+	}
+
+	return NewIncrementVolumeButton(tciClient, label, increment)
 }
 
 func (f *Factory) createSwitchToBandButton(config map[string]interface{}) hamdeck.Button {
@@ -205,7 +289,14 @@ func (f *Factory) createSwitchToBandButton(config map[string]interface{}) hamdec
 		return nil
 	}
 
-	return NewSwitchToBandButton(f.client, label, band)
+	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
+	tciClient, err := f.connections.Get(connection)
+	if err != nil {
+		log.Printf("Cannot create tci.SwitchToBand button: %v", err)
+		return nil
+	}
+
+	return NewSwitchToBandButton(tciClient, label, band)
 }
 
 func parseTCPAddr(arg string) (*net.TCPAddr, error) {

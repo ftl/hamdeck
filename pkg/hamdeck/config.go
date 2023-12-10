@@ -13,11 +13,13 @@ import (
 const (
 	ConfigDefaultFilename = "hamdeck.json"
 	ConfigMainKey         = "hamdeck"
+	ConfigConnections     = "connections"
 	ConfigStartPageID     = "start_page"
 	ConfigPages           = "pages"
 	ConfigButtons         = "buttons"
 	ConfigType            = "type"
 	ConfigIndex           = "index"
+	ConfigConnection      = "connection"
 )
 
 func (d *HamDeck) ReadConfig(r io.Reader) error {
@@ -40,12 +42,21 @@ func (d *HamDeck) ReadConfig(r io.Reader) error {
 	effectiveConfiguration := findEffectiveConfiguration(configuration)
 
 	d.buttonsPerFactory = make([]int, len(d.factories))
+	d.connections = make(map[connectionKey]ConnectionConfig)
 	d.pages = make(map[string]Page)
+
+	connections, ok := (effectiveConfiguration[ConfigConnections]).(map[string]any)
+	if ok {
+		err = d.loadConnections(connections)
+	}
+	if err != nil {
+		return err
+	}
+
 	d.startPageID, ok = effectiveConfiguration[ConfigStartPageID].(string)
 	if !ok {
 		d.startPageID = legacyPageID
 	}
-
 	pages, ok := effectiveConfiguration[ConfigPages].(map[string]any)
 	if ok {
 		err = d.loadPages(pages)
@@ -57,6 +68,8 @@ func (d *HamDeck) ReadConfig(r io.Reader) error {
 	buttons, ok := effectiveConfiguration[ConfigButtons].([]any)
 	if ok {
 		err = d.loadLegacyPage(buttons)
+	} else if len(d.pages) == 0 {
+		d.loadEmptyLegacyPage()
 	}
 	if err != nil {
 		return err
@@ -76,6 +89,23 @@ func findEffectiveConfiguration(configuration map[string]any) map[string]any {
 		return configuration
 	}
 	return subconfiguration
+}
+
+func (d *HamDeck) loadConnections(configuration map[string]any) error {
+	for name, config := range configuration {
+		connection, ok := config.(map[string]any)
+		if !ok {
+			log.Printf("%s is not a valid connection configuration", name)
+			continue
+		}
+		connectionType, ok := ToString(connection[ConfigType])
+		if !ok {
+			log.Printf("connection %s needs a type", name)
+			continue
+		}
+		d.connections[connectionKey{name, connectionType}] = ConnectionConfig(connection)
+	}
+	return nil
 }
 
 func (d *HamDeck) loadPages(configuration map[string]any) error {
@@ -121,6 +151,12 @@ func (d *HamDeck) loadLegacyPage(configuration []any) error {
 		buttons: buttons,
 	}
 	return nil
+}
+
+func (d *HamDeck) loadEmptyLegacyPage() {
+	d.pages[legacyPageID] = Page{
+		buttons: make([]Button, len(d.buttons)),
+	}
 }
 
 func (d *HamDeck) loadButtons(configuration []any) ([]Button, error) {

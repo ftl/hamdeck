@@ -84,6 +84,11 @@ type ButtonFactory interface {
 	CreateButton(config map[string]interface{}) Button
 }
 
+type connectionKey struct {
+	name           string
+	connectionType string
+}
+
 const legacyPageID = ""
 
 type HamDeck struct {
@@ -98,6 +103,8 @@ type HamDeck struct {
 
 	startPageID string
 	pages       map[string]Page
+
+	connections map[connectionKey]ConnectionConfig
 }
 
 type Page struct {
@@ -126,6 +133,11 @@ func New(device Device) *HamDeck {
 
 func (d *HamDeck) RegisterFactory(factory ButtonFactory) {
 	d.factories = append(d.factories, factory)
+}
+
+func (d *HamDeck) GetConnection(name string, connectionType string) (ConnectionConfig, bool) {
+	connection, found := d.connections[connectionKey{name, connectionType}]
+	return connection, found
 }
 
 func (d *HamDeck) RedrawAll(redrawImages bool) {
@@ -299,4 +311,75 @@ func (h *LongpressHandler) Released() {
 		return
 	}
 	h.timer.Stop()
+}
+
+const LegacyConnectionName = ""
+
+type ConnectionConfig map[string]any
+
+type ConnectionConfigProvider interface {
+	GetConnection(string, string) (ConnectionConfig, bool)
+}
+
+type ConnectionFactory[T any] func(string, ConnectionConfig) (T, error)
+
+type ConnectionManager[T any] struct {
+	connectionType   string
+	provider         ConnectionConfigProvider
+	factory          ConnectionFactory[T]
+	connections      map[string]T
+	hasLegacy        bool
+	legacyConnection T
+}
+
+func NewConnectionManager[T any](connectionType string, provider ConnectionConfigProvider, factory ConnectionFactory[T]) *ConnectionManager[T] {
+	return &ConnectionManager[T]{
+		connectionType: connectionType,
+		provider:       provider,
+		factory:        factory,
+		connections:    make(map[string]T),
+	}
+}
+
+func (m *ConnectionManager[T]) SetLegacy(legacyConnection T) {
+	m.hasLegacy = true
+	m.legacyConnection = legacyConnection
+}
+
+func (m *ConnectionManager[T]) Get(name string) (T, error) {
+	var connection T
+	if name == LegacyConnectionName {
+		if !m.hasLegacy {
+			return connection, fmt.Errorf("no legacy %s connection defined", m.connectionType)
+		}
+		return m.legacyConnection, nil
+	}
+
+	connection, ok := m.connections[name]
+	if ok {
+		return connection, nil
+	}
+
+	config, ok := m.provider.GetConnection(name, m.connectionType)
+	if !ok {
+		return connection, fmt.Errorf("no %s connection defined with name %s", m.connectionType, name)
+	}
+
+	connection, err := m.factory(name, config)
+	if err != nil {
+		return connection, err
+	}
+
+	m.connections[name] = connection
+
+	return connection, nil
+}
+
+func (m *ConnectionManager[T]) ForEach(f func(T)) {
+	for _, connection := range m.connections {
+		f(connection)
+	}
+	if m.hasLegacy {
+		f(m.legacyConnection)
+	}
 }
