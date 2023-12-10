@@ -67,7 +67,7 @@ func (d *HamDeck) ReadConfig(r io.Reader) error {
 	buttons, ok := effectiveConfiguration[ConfigButtons].([]any)
 	if ok {
 		err = d.loadLegacyPage(buttons)
-	} else {
+	} else if len(d.pages) == 0 {
 		d.loadEmptyLegacyPage()
 	}
 	if err != nil {
