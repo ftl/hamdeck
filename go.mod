@@ -13,7 +13,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/fogleman/gg v1.3.0
 	github.com/ftl/hamradio v0.2.7
-	github.com/ftl/rigproxy v0.2.5
+	github.com/ftl/rigproxy v0.2.6
 	github.com/ftl/tci v0.3.2
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/jfreymuth/pulse v0.1.0
