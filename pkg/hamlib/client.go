@@ -86,6 +86,25 @@ func NotifyModeListeners(listeners []interface{}, mode client.Mode) {
 	}
 }
 
+type PassbandListener interface {
+	SetPassband(passband client.Frequency)
+}
+
+type PassbandListenerFunc func(client.Frequency)
+
+func (f PassbandListenerFunc) SetPassband(passband client.Frequency) {
+	f(passband)
+}
+
+func NotifyPassbandListeners(listeners []interface{}, passband client.Frequency) {
+	for _, listener := range listeners {
+		passbandListener, ok := listener.(PassbandListener)
+		if ok {
+			passbandListener.SetPassband(passband)
+		}
+	}
+}
+
 type PowerLevelListener interface {
 	SetPowerLevel(powerLevel float64)
 }
@@ -245,6 +264,7 @@ func (c *HamlibClient) setFrequency(frequency client.Frequency) {
 
 func (c *HamlibClient) setModeAndPassband(mode client.Mode, passband client.Frequency) {
 	NotifyModeListeners(c.listeners, mode)
+	NotifyPassbandListeners(c.listeners, passband)
 }
 
 func (c *HamlibClient) setPowerLevel(powerLevel float64) {

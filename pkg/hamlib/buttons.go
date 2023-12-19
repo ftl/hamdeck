@@ -4,6 +4,7 @@ import (
 	"image"
 	"log"
 
+	"github.com/ftl/hamradio"
 	"github.com/ftl/hamradio/bandplan"
 	"github.com/ftl/rigproxy/pkg/client"
 
@@ -14,13 +15,15 @@ import (
 	SetModeButton
 */
 
-func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, label string) *SetModeButton {
+func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, bandwidth client.Frequency, label string, icon string) *SetModeButton {
 	result := &SetModeButton{
 		client:       hamlibClient,
 		enabled:      hamlibClient.Connected(),
 		mode:         mode,
+		bandwidth:    bandwidth,
 		bandplanMode: mode.ToBandplanMode(),
 		label:        label,
+		icon:         icon,
 	}
 	result.longpress = hamdeck.NewLongpressHandler(result.OnLongpress)
 
@@ -32,6 +35,7 @@ func NewSetModeButton(hamlibClient *HamlibClient, mode client.Mode, label string
 type SetModeButton struct {
 	hamdeck.BaseButton
 	client             *HamlibClient
+	iconImage          image.Image
 	image              image.Image
 	selectedImage      image.Image
 	inModePortionImage image.Image
@@ -40,7 +44,11 @@ type SetModeButton struct {
 	inModePortion      bool
 	mode               client.Mode
 	bandplanMode       bandplan.Mode
+	bandwidth          client.Frequency
 	label              string
+	icon               string
+	currentMode        client.Mode
+	currentBandwidth   client.Frequency
 	currentFrequency   client.Frequency
 	longpress          *hamdeck.LongpressHandler
 }
@@ -54,8 +62,23 @@ func (b *SetModeButton) Enable(enabled bool) {
 }
 
 func (b *SetModeButton) SetMode(mode client.Mode) {
+	b.currentMode = mode
 	wasSelected := b.selected
-	b.selected = (mode == b.mode)
+	b.selected = (mode == b.mode) && (b.currentBandwidth == b.bandwidth)
+	if b.selected == wasSelected {
+		return
+	}
+	b.Invalidate(false)
+}
+
+func (b *SetModeButton) SetPassband(passband client.Frequency) {
+	if b.bandwidth == 0 {
+		b.currentBandwidth = 0
+		return
+	}
+	b.currentBandwidth = passband
+	wasSelected := b.selected
+	b.selected = (passband == b.bandwidth) && (b.currentMode == b.mode)
 	if b.selected == wasSelected {
 		return
 	}
@@ -95,15 +118,27 @@ func (b *SetModeButton) redrawImages(gc hamdeck.GraphicContext) {
 	if b.label != "" {
 		text = b.label
 	}
-
-	b.image = gc.DrawSingleLineTextButton(text)
+	b.image = b.redrawButton(gc, text)
 
 	gc.SwapColors()
-	b.selectedImage = gc.DrawSingleLineTextButton(text)
+	b.selectedImage = b.redrawButton(gc, text)
 
 	gc.SwapColors()
 	gc.SetBackground(hamdeck.Blue)
-	b.inModePortionImage = gc.DrawSingleLineTextButton(text)
+	b.inModePortionImage = b.redrawButton(gc, text)
+}
+
+func (b *SetModeButton) redrawButton(gc hamdeck.GraphicContext, text string) image.Image {
+	if b.icon == "" {
+		return gc.DrawSingleLineTextButton(text)
+	}
+
+	gc.SetFontSize(16)
+	if b.iconImage == nil {
+		iconFile := b.icon + ".png"
+		b.iconImage = gc.LoadIconAsset(iconFile)
+	}
+	return gc.DrawIconLabelButton(b.iconImage, text)
 }
 
 func (b *SetModeButton) Pressed() {
@@ -112,7 +147,7 @@ func (b *SetModeButton) Pressed() {
 		return
 	}
 	ctx := b.client.WithRequestTimeout()
-	err := b.client.Conn.SetModeAndPassband(ctx, b.mode, 0)
+	err := b.client.Conn.SetModeAndPassband(ctx, b.mode, hamradio.Frequency(b.bandwidth))
 	if err != nil {
 		log.Printf("cannot set mode: %v", err)
 	}
