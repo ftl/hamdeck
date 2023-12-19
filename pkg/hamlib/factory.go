@@ -19,6 +19,8 @@ const (
 	ConfigLabel1    = "label1"
 	ConfigMode2     = "mode2"
 	ConfigLabel2    = "label2"
+	ConfigIcon      = "icon"
+	ConfigBandwidth = "bandwidth"
 	ConfigBand      = "band"
 	ConfigValue     = "value"
 	ConfigVFO       = "vfo"
@@ -94,10 +96,18 @@ func (f *Factory) CreateButton(config map[string]interface{}) hamdeck.Button {
 
 func (f *Factory) createSetModeButton(config map[string]interface{}) hamdeck.Button {
 	mode, haveMode := hamdeck.ToString(config[ConfigMode])
+	bandwidth, haveBandwidth := hamdeck.ToInt(config[ConfigBandwidth])
 	label, _ := hamdeck.ToString(config[ConfigLabel])
+	icon, haveIcon := hamdeck.ToString(config[ConfigIcon])
 	if !haveMode {
 		log.Print("A hamlib.SetMode button must have a mode field.")
 		return nil
+	}
+	if !haveBandwidth {
+		bandwidth = 0
+	}
+	if !haveIcon {
+		icon = ""
 	}
 
 	connection, _ := hamdeck.ToString(config[hamdeck.ConfigConnection])
@@ -107,7 +117,7 @@ func (f *Factory) createSetModeButton(config map[string]interface{}) hamdeck.But
 		return nil
 	}
 
-	return NewSetModeButton(hamlibClient, client.Mode(mode), label)
+	return NewSetModeButton(hamlibClient, client.Mode(mode), client.Frequency(bandwidth), label, icon)
 }
 
 func (f *Factory) createToggleModeButton(config map[string]interface{}) hamdeck.Button {

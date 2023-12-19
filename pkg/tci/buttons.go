@@ -542,14 +542,15 @@ func (b *SetFilterButton) redrawImages(gc hamdeck.GraphicContext) {
 	}
 
 	iconFile := b.icon + ".png"
-	b.image = gc.DrawIconLabelButton(gc.LoadIconAsset(iconFile), b.label)
+	iconAsset := gc.LoadIconAsset(iconFile)
+	b.image = gc.DrawIconLabelButton(iconAsset, b.label)
 
 	gc.SwapColors()
-	b.selectedImage = gc.DrawIconLabelButton(gc.LoadIconAsset(iconFile), b.label)
+	b.selectedImage = gc.DrawIconLabelButton(iconAsset, b.label)
 
 	gc.SwapColors()
 	gc.SetBackground(hamdeck.Blue)
-	b.inModePortionImage = gc.DrawIconLabelButton(gc.LoadIconAsset(iconFile), b.label)
+	b.inModePortionImage = gc.DrawIconLabelButton(iconAsset, b.label)
 }
 
 func (b *SetFilterButton) Pressed() {
