@@ -1,13 +1,6 @@
 module github.com/ftl/hamdeck
 
-go 1.21
-
-// replace github.com/ftl/tci => ../tci
-
-// replace github.com/ftl/rigproxy => ../rigproxy
-
-// replace github.com/muesli/streamdeck => ../streamdeck
-// replace github.com/jfreymuth/pulse => ../pulse
+go 1.26
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
