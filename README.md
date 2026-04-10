@@ -1,3 +1,5 @@
+**This tool is deprecated and will not be developed any further. Switch to [OpenDeck](https://github.com/nekename/OpenDeck) and use [hamlibplugin](https://github.com/ftl/hamlibplugin) instead.**
+
 # HamDeck
 
 HamDeck allows you to control and automate your ham radio station using an Elgato Stream Deck device. You can define buttons using a JSON configuration file. HamDeck connects to the local pulseaudio server, to a Hamlib rigctld server, or to ExpertSDR through the TCI protocol. Currently the following actions are implemented as Stream Deck buttons:
